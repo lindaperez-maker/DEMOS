@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniCore AI · Demo Interactiva</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════
+   TOKENS — DARK / LIGHT
+═══════════════════════════════════ */
+[data-theme="dark"]{
+  --bg:#090C13;--bg2:#0F1422;--bg3:#161C2E;--bg4:#1C2338;
+  --text:#EEF2FF;--text2:#8EA4C8;--text3:#4A6080;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --glass:rgba(255,255,255,0.03);--glass2:rgba(255,255,255,0.07);
+  --shadow:rgba(0,0,0,0.45);
+}
+[data-theme="light"]{
+  --bg:#F0F4FA;--bg2:#FFFFFF;--bg3:#F7F9FC;--bg4:#EBF0F8;
+  --text:#0D1525;--text2:#4A5E7A;--text3:#8CA0B8;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.13);
+  --glass:rgba(0,0,0,0.02);--glass2:rgba(0,0,0,0.05);
+  --shadow:rgba(0,0,0,0.10);
+}
+:root{
+  --blue:#2D6BE4;--blue2:#1A4FC8;--blue-glow:rgba(45,107,228,0.28);
+  --cyan:#06C8E8;--green:#10D98C;--green2:#0AB874;
+  --amber:#F5A623;--red:#EF4545;--purple:#8B5CF6;
+  --wa:#25D366;
+  --grad:linear-gradient(135deg,#2D6BE4,#06C8E8);
+  --grad-purple:linear-gradient(135deg,#8B5CF6,#2D6BE4);
+  --r:14px;--rsm:9px;
+  --font:'Cabinet Grotesk',sans-serif;
+  --fontb:'Inter',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;transition:background-color .25s,border-color .25s,color .18s}
+html{scroll-behavior:smooth}
+body{font-family:var(--fontb);background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px}
+
+/* ══ TOPBAR ══ */
+.topbar{position:sticky;top:0;z-index:500;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;height:54px;padding:0 12px 0 0;box-shadow:0 2px 16px var(--shadow)}
+.logo{font-family:var(--font);font-weight:900;font-size:16px;padding:0 16px;height:100%;display:flex;align-items:center;gap:8px;border-right:1px solid var(--border);margin-right:6px;white-space:nowrap;flex-shrink:0}
+.logo-dot{width:24px;height:24px;border-radius:7px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;flex-shrink:0}
+.logo-txt{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none;padding:6px 0}
+.nav-tabs::-webkit-scrollbar{display:none}
+.ntab{flex-shrink:0;background:transparent;border:none;color:var(--text3);font-size:12px;font-weight:600;font-family:var(--fontb);padding:6px 11px;border-radius:7px;cursor:pointer;white-space:nowrap}
+.ntab:hover:not(.active){background:var(--glass2);color:var(--text2)}
+.ntab.active{background:var(--blue);color:#fff}
+.topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto;padding-left:8px;flex-shrink:0}
+.theme-btn{background:var(--glass2);border:1px solid var(--border);color:var(--text2);width:34px;height:34px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s}
+.theme-btn:hover{border-color:var(--border2);color:var(--text)}
+.live-badge{background:rgba(16,217,140,0.12);border:1px solid rgba(16,217,140,0.25);color:var(--green);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;display:flex;align-items:center;gap:4px}
+.ldot{width:5px;height:5px;background:var(--green);border-radius:50%;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.ai-top-btn{background:var(--grad);border:none;color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fontb);white-space:nowrap;box-shadow:0 0 18px var(--blue-glow)}
+.ai-top-btn:hover{box-shadow:0 0 26px var(--blue-glow);transform:translateY(-1px)}
+
+/* ══ VIEWS ══ */
+.view{display:none;animation:fadeUp .28s ease}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ TOAST ══ */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:10px 15px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;transform:translateX(240px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 12px 32px var(--shadow);border-left:3px solid var(--blue);max-width:300px;pointer-events:none}
+.toast.show{transform:translateX(0);opacity:1}
+
+/* ══ SECTION ══ */
+.sec{padding:14px 16px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.sec-title{font-family:var(--font);font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px}
+.st-sub{font-size:11px;font-weight:500;color:var(--text3)}
+
+/* ══ CARDS ══ */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);transition:border-color .2s,box-shadow .2s}
+.card:hover{border-color:var(--border2)}
+.card-p{padding:14px}
+
+/* ══ BTN ══ */
+.btn{border:none;border-radius:8px;font-family:var(--fontb);font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--grad);color:#fff;padding:9px 16px;font-size:13px;box-shadow:0 0 16px var(--blue-glow)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 24px var(--blue-glow)}
+.btn-secondary{background:var(--glass2);color:var(--text2);border:1px solid var(--border);padding:8px 14px;font-size:12px}
+.btn-secondary:hover{border-color:var(--border2);color:var(--text)}
+.btn-danger{background:rgba(239,69,69,0.12);color:var(--red);border:1px solid rgba(239,69,69,0.25);padding:7px 12px;font-size:12px}
+.btn-success{background:rgba(16,217,140,0.12);color:var(--green);border:1px solid rgba(16,217,140,0.25);padding:7px 12px;font-size:12px}
+.btn-purple{background:var(--grad-purple);color:#fff;padding:9px 16px;font-size:13px}
+.btn-sm{padding:6px 11px;font-size:11px}
+
+/* ══ AI BTN ══ */
+.ai-btn{background:linear-gradient(135deg,rgba(139,92,246,0.13),rgba(45,107,228,0.13));border:1px solid rgba(139,92,246,0.35);color:var(--text);padding:8px 14px;border-radius:9px;font-family:var(--fontb);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.ai-btn:hover{border-color:rgba(139,92,246,0.6);box-shadow:0 0 20px rgba(139,92,246,0.15)}
+.ai-spin{animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══ FORM ══ */
+.form-group{margin-bottom:12px}
+.form-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fontb);outline:none;transition:border-color .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(45,107,228,0.12)}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text3)}
+.form-textarea{resize:vertical;min-height:72px}
+.form-select option{background:var(--bg3);color:var(--text)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+
+/* ══ MODAL ══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:800;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;animation:fadeUp .25s ease}
+.modal-head{padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:var(--font);font-size:17px;font-weight:900;color:var(--text)}
+.modal-close{background:var(--glass2);border:1px solid var(--border);color:var(--text3);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-body{padding:16px 20px 20px}
+
+/* ══ KPI GRID ══ */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+@media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kcard{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px;cursor:pointer;position:relative;overflow:hidden}
+.kcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);opacity:0;transition:opacity .25s}
+.kcard:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 8px 22px var(--shadow)}
+.kcard:hover::before{opacity:1}
+.kcard-lbl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+.kcard-val{font-family:var(--font);font-size:22px;font-weight:900;color:var(--text);line-height:1;margin-bottom:5px}
+.kcard-delta{font-size:11px;font-weight:700}
+.delta-up{color:var(--green)}
+.delta-dn{color:var(--red)}
+.kcard-spark{height:22px;margin-top:6px;display:flex;align-items:flex-end;gap:2px}
+.sbar{flex:1;border-radius:2px;background:rgba(45,107,228,0.18)}
+.sbar.hi{background:rgba(45,107,228,0.65)}
+
+/* ══ PIPELINE ══ */
+.pipeline-wrap{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;overflow-x:auto;padding-bottom:4px}
+@media(max-width:900px){.pipeline-wrap{grid-template-columns:repeat(3,180px)}}
+.pipe-col{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px;min-height:240px}
+.pipe-col-head{margin-bottom:10px}
+.pipe-col-title{font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between}
+.pipe-col-count{background:var(--glass2);color:var(--text3);font-size:10px;padding:2px 6px;border-radius:10px}
+.pipe-col-val{font-size:10px;color:var(--text3);margin-top:3px}
+.pcard{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:9px;margin-bottom:7px;cursor:pointer;transition:all .2s}
+.pcard:hover{border-color:var(--border2);transform:translateX(2px);box-shadow:3px 0 14px var(--shadow)}
+.pcard.highlight{border-color:rgba(16,217,140,0.4);box-shadow:0 0 12px rgba(16,217,140,0.1)}
+.pc-company{font-size:12px;font-weight:800;color:var(--text);margin-bottom:2px}
+.pc-contact{font-size:10px;color:var(--text3);margin-bottom:6px}
+.pc-foot{display:flex;align-items:center;justify-content:space-between}
+.pc-val{font-size:11px;font-weight:800;color:var(--green)}
+.pc-prob{font-size:10px;color:var(--text3)}
+.ptag{font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;display:inline-block;margin-top:5px}
+.ptag-wa{background:rgba(37,211,102,0.14);color:#25D366}
+.ptag-email{background:rgba(45,107,228,0.14);color:#60A5FA}
+.ptag-call{background:rgba(245,166,35,0.14);color:var(--amber)}
+.ptag-bot{background:rgba(139,92,246,0.14);color:var(--purple)}
+.ptag-new{background:rgba(16,217,140,0.14);color:var(--green)}
+
+/* ══ CRM ══ */
+.crm-wrap{display:grid;grid-template-columns:240px 1fr;gap:11px}
+@media(max-width:700px){.crm-wrap{grid-template-columns:1fr}}
+.crm-list{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.crm-search-row{padding:9px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.crm-search-row input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:12px;font-family:var(--fontb)}
+.crm-search-row input::placeholder{color:var(--text3)}
+.crm-row{display:flex;align-items:center;gap:9px;padding:9px 11px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.crm-row:hover,.crm-row.active{background:var(--glass2)}
+.crm-row.active{border-left:2px solid var(--blue)}
+.crm-av{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;font-family:var(--font);color:#fff;flex-shrink:0}
+.crm-rname{font-size:12px;font-weight:700;color:var(--text)}
+.crm-rsub{font-size:10px;color:var(--text3)}
+.cr-status{font-size:9px;font-weight:700;margin-left:auto;padding:2px 7px;border-radius:10px;flex-shrink:0}
+.s-hot{background:rgba(239,69,69,0.14);color:var(--red)}
+.s-warm{background:rgba(245,166,35,0.14);color:var(--amber)}
+.s-cold{background:rgba(90,112,144,0.14);color:var(--text3)}
+.s-client{background:rgba(16,217,140,0.14);color:var(--green)}
+.s-new{background:rgba(45,107,228,0.14);color:#60A5FA}
+.crm-detail{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.crm-det-hd{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.crm-det-av{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;font-family:var(--font);color:#fff;flex-shrink:0}
+.crm-det-name{font-family:var(--font);font-size:18px;font-weight:900;color:var(--text)}
+.crm-det-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.crm-det-tags{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.dtag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px}
+.crm-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:13px}
+.crm-field{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:9px}
+.cf-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.cf-val{font-size:12px;font-weight:700;color:var(--text)}
+.timeline{border-left:2px solid var(--border);margin-left:7px;padding-left:14px}
+.tl-item{position:relative;margin-bottom:10px}
+.tl-dot{position:absolute;left:-20px;top:3px;width:8px;height:8px;border-radius:50%;background:var(--blue);border:2px solid var(--bg2)}
+.tl-item.g .tl-dot{background:var(--green)}
+.tl-item.a .tl-dot{background:var(--amber)}
+.tl-item.p .tl-dot{background:var(--purple)}
+.tl-text{font-size:12px;color:var(--text2);line-height:1.4}
+.tl-time{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* ══ WHATSAPP ══ */
+.wa-wrap{display:grid;grid-template-columns:185px 1fr;gap:11px}
+@media(max-width:700px){.wa-wrap{grid-template-columns:1fr}}
+.wa-sidebar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.wa-sidebar-hd{padding:9px 11px;border-bottom:1px solid var(--border);font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between}
+.wa-contact{display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.wa-contact:hover,.wa-contact.active{background:var(--glass2)}
+.wa-contact.active{border-left:2px solid #25D366}
+.wc-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.wc-name{font-size:12px;font-weight:700;color:var(--text)}
+.wc-preview{font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92px}
+.wc-unread{background:#25D366;color:#fff;font-size:9px;font-weight:800;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-left:auto;flex-shrink:0}
+.wa-main{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden}
+.wa-chat-hd{background:var(--bg3);padding:9px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.wa-chat-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0}
+.wa-chat-name{font-size:13px;font-weight:800;color:var(--text)}
+.wa-chat-status{font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px;margin-top:1px}
+.wa-chat-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.wa-act{background:var(--glass2);border:1px solid var(--border);color:var(--text3);padding:5px 9px;border-radius:6px;font-size:11px;cursor:pointer;font-family:var(--fontb);transition:all .18s}
+.wa-act:hover{color:var(--text);border-color:var(--border2)}
+.wa-act.active{background:rgba(16,217,140,0.12);border-color:rgba(16,217,140,0.28);color:var(--green)}
+.wa-bot-badge{background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.26);color:var(--purple);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;cursor:pointer;font-family:var(--fontb);transition:all .2s}
+.wa-body{flex:1;overflow-y:auto;padding:12px;background:var(--bg);min-height:280px;max-height:280px;display:flex;flex-direction:column;gap:5px}
+[data-theme="light"] .wa-body{background:#E8EDF2}
+.wa-msg{max-width:78%;padding:7px 12px;border-radius:8px;font-size:13px;line-height:1.5;word-break:break-word}
+.wa-msg.recv{background:#202c33;color:#e9edef;align-self:flex-start;border-radius:0 8px 8px 8px}
+[data-theme="light"] .wa-msg.recv{background:#fff;color:#111;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.wa-msg.sent{background:#005c4b;color:#e9edef;align-self:flex-end;border-radius:8px 8px 0 8px}
+[data-theme="light"] .wa-msg.sent{background:#dcf8c6;color:#111}
+.wa-msg.bot{background:rgba(139,92,246,0.14);border:1px solid rgba(139,92,246,0.25);color:var(--text);align-self:flex-start;border-radius:0 8px 8px 8px}
+.wa-msg-time{font-size:10px;color:#8696a0;float:right;margin-left:8px;margin-top:2px}
+.wa-typing{display:flex;align-items:center;gap:4px;padding:8px 12px;background:rgba(139,92,246,0.14);border:1px solid rgba(139,92,246,0.25);border-radius:0 8px 8px 8px;align-self:flex-start;opacity:0;transition:opacity .3s}
+.wa-typing.show{opacity:1}
+.typing-d{width:7px;height:7px;border-radius:50%;background:var(--purple);animation:typBounce 1.2s infinite}
+.typing-d:nth-child(2){animation-delay:.2s}
+.typing-d:nth-child(3){animation-delay:.4s}
+@keyframes typBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.wa-input-row{display:flex;gap:7px;padding:9px;border-top:1px solid var(--border);background:var(--bg3)}
+.wa-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 11px;border-radius:8px;font-size:13px;font-family:var(--fontb);outline:none}
+.wa-input:focus{border-color:var(--blue)}
+.wa-input::placeholder{color:var(--text3)}
+.wa-send{background:#25D366;border:none;color:#fff;padding:7px 13px;border-radius:8px;cursor:pointer;font-size:14px;transition:background .18s}
+.wa-send:hover{background:#1da851}
+.wa-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
+.wm{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rsm);padding:9px;text-align:center}
+.wm-val{font-family:var(--font);font-size:17px;font-weight:900;color:var(--text)}
+.wm-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* ══ AGENTS ══ */
+.agents-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+@media(max-width:700px){.agents-grid{grid-template-columns:1fr}}
+.agent-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px;transition:all .2s;cursor:pointer}
+.agent-card:hover{border-color:var(--border2)}
+.agent-card.on{border-color:rgba(16,217,140,0.32);box-shadow:0 0 16px rgba(16,217,140,0.07)}
+.agent-card.purple-glow:hover{border-color:rgba(139,92,246,0.32)}
+.ag-icon{font-size:22px;margin-bottom:7px}
+.ag-name{font-size:12px;font-weight:800;color:var(--text);margin-bottom:3px}
+.ag-desc{font-size:10px;color:var(--text3);margin-bottom:8px;line-height:1.4}
+.ag-stat{font-size:11px;color:var(--text2);font-weight:600;margin-bottom:8px}
+.ag-toggle{display:flex;align-items:center;justify-content:space-between}
+.sw{width:34px;height:18px;background:var(--glass2);border-radius:10px;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0;border:1px solid var(--border)}
+.sw.on{background:var(--green);border-color:var(--green)}
+.sw::after{content:'';position:absolute;left:2px;top:1px;width:13px;height:13px;background:#fff;border-radius:50%;transition:left .25s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw.on::after{left:17px}
+
+/* ══ VOIP ══ */
+.voip-wrap{display:grid;grid-template-columns:200px 1fr;gap:11px}
+@media(max-width:700px){.voip-wrap{grid-template-columns:1fr}}
+.sp-status{display:inline-flex;align-items:center;gap:5px;background:rgba(16,217,140,0.1);border:1px solid rgba(16,217,140,0.2);color:var(--green);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px}
+.sp-display{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:11px;font-family:'Courier New',monospace;font-size:17px;font-weight:700;color:var(--text);letter-spacing:2px;text-align:center;min-height:44px}
+.dialpad{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:11px}
+.dp-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 6px;cursor:pointer;font-size:14px;font-weight:800;color:var(--text);font-family:var(--font);transition:all .14s}
+.dp-btn:hover{background:var(--glass2);transform:scale(.97)}
+.dp-sub{font-size:8px;color:var(--text3);font-family:var(--fontb);font-weight:600;margin-top:1px}
+.call-btn{background:var(--green);border:none;color:#fff;width:100%;padding:11px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:900;cursor:pointer;margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:6px}
+.end-btn{background:var(--red);color:#fff;border:none;width:100%;padding:9px;border-radius:8px;font-family:var(--fontb);font-size:12px;font-weight:700;cursor:pointer;display:none}
+.call-row{display:flex;align-items:center;gap:8px;padding:8px 13px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.call-row:hover{background:var(--glass2)}
+
+/* ══ ANALYTICS ══ */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:700px){.analytics-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.bar-chart{display:flex;align-items:flex-end;gap:5px;height:90px;padding-bottom:16px;position:relative}
+.bar-chart::after{content:'';position:absolute;bottom:16px;left:0;right:0;height:1px;background:var(--border)}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center}
+.bar-fill{width:100%;border-radius:4px 4px 0 0;min-height:4px;position:relative;cursor:default;transition:height .9s ease}
+.bar-fill:hover{filter:brightness(1.25)}
+.bar-lbl{font-size:9px;color:var(--text3);position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);white-space:nowrap}
+.legend-item{display:flex;align-items:center;gap:5px;margin-bottom:6px;font-size:11px;color:var(--text2)}
+.leg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.leg-val{margin-left:auto;font-weight:800;color:var(--text)}
+
+/* ══ PRICING ══ */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:860px;margin:0 auto}
+@media(max-width:700px){.pricing-grid{grid-template-columns:1fr}}
+.price-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:22px;transition:all .3s;position:relative;overflow:hidden}
+.price-card.featured{border-color:rgba(45,107,228,0.4);box-shadow:0 0 36px rgba(45,107,228,0.08)}
+.price-card.featured::before{content:'RECOMENDADO';position:absolute;top:13px;right:-28px;background:var(--grad);color:#fff;font-size:9px;font-weight:900;padding:4px 36px;transform:rotate(35deg);letter-spacing:1px}
+.price-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px var(--shadow)}
+.price-plan{font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.price-val{font-family:var(--font);font-size:32px;font-weight:900;color:var(--text);line-height:1;margin-bottom:3px}
+.price-val small{font-size:14px;font-weight:600;color:var(--text3)}
+.price-sub{font-size:11px;color:var(--text3);margin-bottom:16px}
+.price-features{list-style:none;margin-bottom:18px}
+.price-features li{font-size:12px;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.price-features li:last-child{border:none}
+
+/* ══ PROGRESS ══ */
+.progress-wrap{margin-bottom:9px}
+.progress-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:3px}
+.progress-bar{height:5px;background:var(--glass2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width .8s ease}
+
+/* ══ JOURNEY ══ */
+.journey-scroll{overflow-x:auto;padding-bottom:8px}
+.journey{display:flex;align-items:center;min-width:max-content;padding:8px 0}
+.jstep{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 11px;position:relative;cursor:pointer}
+.jstep:not(:last-child)::after{content:'';position:absolute;right:-12px;top:24px;width:24px;height:2px;background:var(--border2)}
+.jstep-ico{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;border:2px solid var(--border);background:var(--bg2);transition:all .25s}
+.jstep-ico:hover,.jstep.active .jstep-ico{border-color:var(--blue);background:rgba(45,107,228,0.1);transform:scale(1.08);box-shadow:0 0 16px var(--blue-glow)}
+.jstep-lbl{font-size:9px;font-weight:700;color:var(--text3);text-align:center;max-width:52px;line-height:1.3}
+.jstep.done .jstep-ico{border-color:var(--green);background:rgba(16,217,140,0.08)}
+.jstep.done .jstep-lbl{color:var(--green)}
+
+/* ══ NOTIF BAR ══ */
+.notif-bar{background:linear-gradient(135deg,rgba(45,107,228,0.08),rgba(6,200,232,0.08));border:1px solid rgba(45,107,228,0.2);border-radius:var(--rsm);padding:8px 13px;margin-bottom:11px;display:flex;align-items:center;gap:9px;cursor:pointer;animation:notifPulse 3s infinite}
+@keyframes notifPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 14px rgba(45,107,228,0.2)}}
+.notif-text{font-size:12px;color:var(--text2);flex:1}
+.notif-text strong{color:var(--text)}
+
+/* ══ AI PANEL ══ */
+.ai-result-panel{background:linear-gradient(135deg,rgba(139,92,246,0.06),rgba(45,107,228,0.06));border:1px solid rgba(139,92,246,0.18);border-radius:var(--r);padding:13px;display:none;animation:fadeUp .35s ease;margin-top:11px}
+.ai-result-panel.show{display:block}
+.ai-block{background:var(--bg3);border:1px solid rgba(139,92,246,0.14);border-radius:var(--rsm);padding:10px;margin-bottom:8px}
+.ai-block-title{font-size:10px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.ai-insight{font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:3px;padding-left:12px;position:relative}
+.ai-insight::before{content:'›';position:absolute;left:0;color:var(--purple);font-weight:900}
+.ai-rec{background:rgba(16,217,140,0.06);border:1px solid rgba(16,217,140,0.16);border-radius:var(--rsm);padding:9px 11px;margin-bottom:7px;font-size:12px;color:var(--text2);line-height:1.5}
+.ai-rec strong{color:var(--green)}
+.ai-score-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.score-bar-bg{flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:3px}
+.score-lbl{font-size:11px;font-weight:700;color:var(--text2);min-width:80px}
+.score-num{font-size:11px;font-weight:800;min-width:34px;text-align:right}
+
+/* ══ TAGS ══ */
+.tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px}
+.tag-hot{background:rgba(239,69,69,0.14);color:var(--red)}
+.tag-b2b{background:rgba(45,107,228,0.14);color:#60A5FA}
+.tag-ga{background:rgba(16,217,140,0.14);color:var(--green)}
+.tag-ai{background:rgba(139,92,246,0.14);color:var(--purple)}
+
+/* ══ STEP INDICATOR ══ */
+.steps-bar{display:flex;gap:6px;margin-bottom:16px}
+.step-ind{flex:1;height:3px;border-radius:2px;background:var(--border2);transition:background .3s}
+.step-ind.done{background:var(--blue)}
+.step-ind.active{background:var(--blue)}
+.step-lbl-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:14px}
+.step-lbl-row span.on{color:var(--blue);font-weight:700}
+
+/* ══ MISC ══ */
+.divider{height:1px;background:var(--border);margin:13px 0}
+.badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px}
+.empty-state{text-align:center;padding:32px 16px;color:var(--text3)}
+.empty-state .es-icon{font-size:36px;margin-bottom:8px}
+.empty-state .es-text{font-size:13px}
+.flow-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:11px;background:var(--bg2);border:1px solid rgba(16,217,140,0.16);border-radius:var(--r);margin-top:10px}
+.fl-step{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:11px;color:var(--text2)}
+.fl-arr{color:var(--green);font-weight:900;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-dot">O</div>
+    <span class="logo-txt">OmniCore</span>&nbsp;AI
+  </div>
+  <div class="nav-tabs">
+    <button class="ntab active" onclick="goView('dashboard',this)">⚡ Dashboard</button>
+    <button class="ntab" onclick="goView('pipeline',this)">🏆 Pipeline</button>
+    <button class="ntab" onclick="goView('crm',this)">🏢 CRM</button>
+    <button class="ntab" onclick="goView('chatbot',this)">🤖 Chatbot IA</button>
+    <button class="ntab" onclick="goView('whatsapp',this)">💬 WhatsApp</button>
+    <button class="ntab" onclick="goView('campaigns',this)">📡 Campañas</button>
+    <button class="ntab" onclick="goView('ads',this)">🎯 Ads</button>
+    <button class="ntab" onclick="goView('agents',this)">🦾 Agentes</button>
+    <button class="ntab" onclick="goView('voip',this)">📞 VoIP</button>
+    <button class="ntab" onclick="goView('analytics',this)">📊 Analítica</button>
+    <button class="ntab" onclick="goView('pricing',this)">💎 Planes</button>
+  </div>
+  <div class="topbar-right">
+    <div class="theme-toggle-wrap" onclick="toggleTheme()" title="Modo claro / oscuro" style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none">
+      <span id="themeIconLeft" style="font-size:13px">☀️</span>
+      <div id="themeSwitch" style="width:42px;height:24px;background:var(--glass2);border:1.5px solid var(--border2);border-radius:12px;position:relative;transition:background .3s;flex-shrink:0">
+        <div id="themeKnob" style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--text2);transition:all .3s;box-shadow:0 1px 4px var(--shadow)"></div>
+      </div>
+      <span id="themeIconRight" style="font-size:13px">🌙</span>
+    </div>
+    <div class="live-badge"><span class="ldot"></span>Live</div>
+    <button class="ai-top-btn" onclick="showGlobalAI()">✦ IA</button>
+  </div>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div class="view active" id="v-dashboard">
+  <div class="sec">
+    <div class="notif-bar" id="notifBar" onclick="this.style.display='none';toast('🔕 Descartado')">
+      <div style="font-size:15px">🔔</div>
+      <div class="notif-text"><strong>Nuevo lead calificado:</strong> TechCorp Colombia · Google Ads · $24,000 USD → Agente IA activado</div>
+      <div style="font-size:11px;color:var(--text3);padding:2px 7px;border-radius:5px;background:var(--glass2);flex-shrink:0">✕</div>
+    </div>
+    <div class="sec-hd">
+      <div class="sec-title">⚡ Dashboard Ejecutivo <span class="st-sub">· Hoy · Tiempo real</span></div>
+      <div style="display:flex;gap:7px">
+        <button class="ai-btn" onclick="showGlobalAI()"><span style="animation:aiPulse 2s infinite;display:inline-block">✦</span> Analizar con IA</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('newClient')">+ Nuevo Cliente</button>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kcard" onclick="toast('📊 47 leads hoy: 28 Google Ads + 19 Meta Ads')"><div class="kcard-lbl">Leads Nuevos</div><div class="kcard-val" id="kLeads">0</div><div class="kcard-delta delta-up">▲ 12.4% vs ayer</div><div class="kcard-spark" id="sp1"></div></div>
+      <div class="kcard" onclick="toast('💰 31 oportunidades · $284,000 USD pipeline')"><div class="kcard-lbl">Oportunidades</div><div class="kcard-val" id="kOpps">0</div><div class="kcard-delta delta-up">▲ 8.2% semana</div><div class="kcard-spark" id="sp2"></div></div>
+      <div class="kcard" onclick="toast('🏆 3 cierres hoy · $38,400 USD acumulado')"><div class="kcard-lbl">Cierres del día</div><div class="kcard-val" id="kSales">0</div><div class="kcard-delta delta-up">▲ 24% este mes</div><div class="kcard-spark" id="sp3"></div></div>
+      <div class="kcard" onclick="toast('📈 18.4% conversión vs benchmark industria 6.2%')"><div class="kcard-lbl">Conversión</div><div class="kcard-val" id="kConv">0%</div><div class="kcard-delta delta-up">▲ 3.1pp mes</div><div class="kcard-spark" id="sp4"></div></div>
+      <div class="kcard" onclick="toast('📱 847 mensajes hoy · 94% leídos · Bot atendió 82%')"><div class="kcard-lbl">WhatsApp</div><div class="kcard-val" id="kWA">0</div><div class="kcard-delta delta-up">▲ 31% semana</div><div class="kcard-spark" id="sp5"></div></div>
+      <div class="kcard" onclick="toast('📞 156 llamadas · 62% contactabilidad · Prom 4:32 min')"><div class="kcard-lbl">Llamadas</div><div class="kcard-val" id="kCalls">0</div><div class="kcard-delta delta-dn">▼ 4% vs ayer</div><div class="kcard-spark" id="sp6"></div></div>
+      <div class="kcard" onclick="toast('📧 24.8% apertura email · 6.2% clic')"><div class="kcard-lbl">Email apertura</div><div class="kcard-val" id="kEmails">0%</div><div class="kcard-delta delta-up">▲ 2.4pp</div><div class="kcard-spark" id="sp7"></div></div>
+      <div class="kcard" onclick="toast('💵 $284,600 USD facturado este mes')"><div class="kcard-lbl">Ingresos mes</div><div class="kcard-val" id="kRev">$0</div><div class="kcard-delta delta-up">▲ 18.7%</div><div class="kcard-spark" id="sp8"></div></div>
+    </div>
+
+    <!-- AI Result Panel -->
+    <div id="globalAiPanel" class="ai-result-panel">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px">
+        <span style="font-size:15px">✦</span>
+        <div style="font-family:var(--font);font-size:13px;font-weight:800;color:var(--text);flex:1">OmniCore Intelligence · Análisis en tiempo real</div>
+        <span id="aiLoadingIndicator" style="display:none" class="ai-spin">⟳</span>
+      </div>
+      <div id="aiResultContent">
+        <div class="ai-block">
+          <div class="ai-block-title">✦ Oportunidades críticas detectadas</div>
+          <div class="ai-insight">TechCorp Colombia score 92/100. Contactar en las próximas 2h — mayor probabilidad de conversión.</div>
+          <div class="ai-insight">Distribuidora Sur: 8 días sin actividad. Secuencia reactivación WhatsApp recomendada.</div>
+          <div class="ai-insight">Google Ads CPL $8.45 vs benchmark $28. Escalar presupuesto 40% esta semana.</div>
+        </div>
+        <div class="ai-block">
+          <div class="ai-block-title">📈 Scoring predictivo — Leads prioritarios</div>
+          <div class="ai-score-row"><span class="score-lbl">TechCorp CO</span><div class="score-bar-bg"><div class="score-bar-fill" style="width:92%;background:linear-gradient(90deg,var(--green),var(--cyan))"></div></div><span class="score-num" style="color:var(--green)">92</span></div>
+          <div class="ai-score-row"><span class="score-lbl">Al. Frescos</span><div class="score-bar-bg"><div class="score-bar-fill" style="width:81%;background:linear-gradient(90deg,var(--blue),var(--cyan))"></div></div><span class="score-num" style="color:#60A5FA">81</span></div>
+          <div class="ai-score-row"><span class="score-lbl">InnovaLogística</span><div class="score-bar-bg"><div class="score-bar-fill" style="width:68%;background:linear-gradient(90deg,var(--amber),var(--green))"></div></div><span class="score-num" style="color:var(--amber)">68</span></div>
+        </div>
+        <div class="ai-rec">✦ <strong>Upsell:</strong> 3 clientes con email tienen perfil para WhatsApp API. Potencial: <strong>+$8,400 USD/mes</strong>.</div>
+        <div style="display:flex;gap:7px;margin-top:7px">
+          <button onclick="toast('🎯 Recomendaciones aplicadas. Flujos activados.')" class="btn btn-primary" style="flex:1;justify-content:center;font-size:12px">Aplicar todo</button>
+          <button onclick="document.getElementById('globalAiPanel').classList.remove('show')" class="btn btn-secondary" style="flex:1;justify-content:center;font-size:12px">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-title" style="margin-top:18px;margin-bottom:10px">🔄 Journey del Cliente</div>
+    <div class="journey-scroll">
+      <div class="journey">
+        <div class="jstep done" onclick="toast('✅ Captación: 47 leads hoy vía Ads + WA + Orgánico')"><div class="jstep-ico">🎯</div><div class="jstep-lbl">Captación</div></div>
+        <div class="jstep done" onclick="toast('✅ Lead calificado por IA en &lt;8 seg, 24/7')"><div class="jstep-ico">📥</div><div class="jstep-lbl">Lead IA</div></div>
+        <div class="jstep done" onclick="toast('✅ Enriquecimiento automático: empresa, contacto, scoring')"><div class="jstep-ico">✦</div><div class="jstep-lbl">Enriquece</div></div>
+        <div class="jstep active" onclick="toast('⚡ 12 contactos activos ahora: WA + email + llamada')"><div class="jstep-ico">💬</div><div class="jstep-lbl">Contacto</div></div>
+        <div class="jstep" onclick="toast('🔜 31 oportunidades · $284K pipeline')"><div class="jstep-ico">📊</div><div class="jstep-lbl">Oportunidad</div></div>
+        <div class="jstep" onclick="toast('📄 Propuesta IA generada en 3 min por perfil CRM')"><div class="jstep-ico">📝</div><div class="jstep-lbl">Propuesta</div></div>
+        <div class="jstep" onclick="toast('🏆 3 cierres hoy · $38,400 USD · 18.4% conversión')"><div class="jstep-ico">🏆</div><div class="jstep-lbl">Cierre</div></div>
+        <div class="jstep" onclick="toast('🚀 8 clientes en onboarding activo')"><div class="jstep-ico">🚀</div><div class="jstep-lbl">Onboarding</div></div>
+        <div class="jstep" onclick="toast('💰 3 oportunidades upsell detectadas por IA')"><div class="jstep-ico">💰</div><div class="jstep-lbl">Expansión</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PIPELINE ══════════ -->
+<div class="view" id="v-pipeline">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">🏆 Pipeline Comercial <span class="st-sub">31 oportunidades · $284,000</span></div>
+      <div style="display:flex;gap:7px">
+        <button class="ai-btn btn-sm" onclick="toast('✦ IA: LogiExpress 82% · Alimentos 65% · FinanzasCorp 70% — priorizar HOY')"><span>✦</span> IA</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('newOpp')">+ Oportunidad</button>
+      </div>
+    </div>
+    <div class="pipeline-wrap" id="pipelineBoard">
+      <!-- Renderizado dinámico -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CRM ══════════ -->
+<div class="view" id="v-crm">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">🏢 CRM — Empresas &amp; Contactos <span class="st-sub" id="crmCount">6 registros</span></div>
+      <div style="display:flex;gap:7px">
+        <button class="ai-btn btn-sm" onclick="enrichCRM()"><span>✦</span> Enriquecer IA</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('newClient')">+ Nuevo Cliente</button>
+      </div>
+    </div>
+    <div class="crm-wrap">
+      <div class="crm-list">
+        <div class="crm-search-row"><span style="color:var(--text3)">🔍</span><input type="text" placeholder="Buscar..." id="crmSearch" oninput="filterCRM(this.value)"></div>
+        <div id="crmRows"></div>
+      </div>
+      <div class="crm-detail" id="crmDetail">
+        <div class="empty-state"><div class="es-icon">🏢</div><div class="es-text">Selecciona una empresa de la lista</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CHATBOT IA REAL ══════════ -->
+<div class="view" id="v-chatbot">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">🤖 Chatbot IA — Demo en Vivo <span class="st-sub">· Powered by Claude · Responde como asistente de OmniCore</span></div>
+      <div style="display:flex;gap:7px;align-items:center">
+        <div style="background:rgba(16,217,140,0.12);border:1px solid rgba(16,217,140,0.25);color:var(--green);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px"><span class="ldot"></span> IA Activa</div>
+        <button class="btn btn-secondary btn-sm" onclick="clearChat()">🗑 Limpiar</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:11px">
+      <div class="card" style="display:flex;flex-direction:column">
+        <div style="padding:10px 13px;border-bottom:1px solid var(--border);background:var(--bg3);border-radius:var(--r) var(--r) 0 0;display:flex;align-items:center;gap:9px">
+          <div style="width:34px;height:34px;border-radius:50%;background:var(--grad-purple);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;flex-shrink:0">✦</div>
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--text)">Asistente OmniCore AI</div>
+            <div style="font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px"><span class="ldot"></span> Disponible 24/7</div>
+          </div>
+          <div style="margin-left:auto;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);color:var(--purple);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">🤖 Claude AI</div>
+        </div>
+        <div id="chatMessages" style="flex:1;overflow-y:auto;padding:13px;min-height:320px;max-height:380px;display:flex;flex-direction:column;gap:8px;background:var(--bg)">
+          <div style="align-self:flex-start;max-width:80%;background:var(--bg3);border:1px solid var(--border);border-radius:0 10px 10px 10px;padding:10px 13px;font-size:13px;color:var(--text);line-height:1.55">
+            ¡Hola! 👋 Soy el asistente de <strong>OmniCore AI</strong>. Puedo ayudarte con:<br><br>
+            📦 Información de planes y precios<br>
+            🤖 Cómo funciona la automatización<br>
+            💬 WhatsApp API y chatbots<br>
+            📊 CRM e integraciones<br>
+            🎯 Google Ads y Meta Ads<br><br>
+            ¿En qué te puedo ayudar hoy?
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;float:right">ahora</div>
+          </div>
+        </div>
+        <div id="chatTyping" class="wa-typing" style="margin:0 13px 8px;background:var(--bg3);border-color:var(--border)">
+          <div class="typing-d" style="background:var(--purple)"></div>
+          <div class="typing-d" style="background:var(--purple)"></div>
+          <div class="typing-d" style="background:var(--purple)"></div>
+        </div>
+        <div style="display:flex;gap:7px;padding:9px;border-top:1px solid var(--border);background:var(--bg3)">
+          <input class="form-input" id="chatInput" type="text" placeholder="Escribe tu pregunta sobre OmniCore..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-primary" style="padding:8px 14px" onclick="sendChat()">➤ Enviar</button>
+        </div>
+      </div>
+      <!-- Quick replies -->
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div class="card card-p">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px">Preguntas rápidas</div>
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;margin-bottom:6px;font-size:11px;text-align:left" onclick="quickChat('¿Cuánto cuesta el plan Growth?')">💰 ¿Cuánto cuesta el plan Growth?</button>
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;margin-bottom:6px;font-size:11px;text-align:left" onclick="quickChat('¿Cómo funciona el chatbot con WhatsApp?')">💬 ¿Cómo funciona el chatbot WA?</button>
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;margin-bottom:6px;font-size:11px;text-align:left" onclick="quickChat('¿Qué es un agente IA autónomo?')">🤖 ¿Qué es un agente IA autónomo?</button>
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;margin-bottom:6px;font-size:11px;text-align:left" onclick="quickChat('¿Qué integraciones tienen disponibles?')">🔗 ¿Qué integraciones tienen?</button>
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;margin-bottom:6px;font-size:11px;text-align:left" onclick="quickChat('¿Cuánto tiempo toma la implementación?')">⏱ ¿Cuánto toma implementar?</button>
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;margin-bottom:6px;font-size:11px;text-align:left" onclick="quickChat('¿Tienen servicio para empresas pequeñas?')">🏢 ¿Para empresas pequeñas?</button>
+          <button class="btn btn-secondary" style="width:100%;justify-content:flex-start;font-size:11px;text-align:left" onclick="quickChat('¿El plan Enterprise incluye VoIP?')">📞 ¿Enterprise incluye VoIP?</button>
+        </div>
+        <div class="card card-p">
+          <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Simular escenario</div>
+          <button class="btn btn-purple" style="width:100%;justify-content:center;margin-bottom:6px;font-size:11px" onclick="simulateBot('lead')">🎯 Simular lead entrante</button>
+          <button class="btn" style="width:100%;justify-content:center;background:rgba(16,217,140,0.12);color:var(--green);border:1px solid rgba(16,217,140,0.25);font-size:11px" onclick="simulateBot('quote')">📋 Simular solicitud cotización</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ WHATSAPP ══════════ -->
+<div class="view" id="v-whatsapp">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">💬 WhatsApp Business API <span class="st-sub">Multiagente · Bot IA activo · 24 chats</span></div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('newWA')">+ Nueva conversación</button>
+    </div>
+    <div class="wa-wrap">
+      <div class="wa-sidebar">
+        <div class="wa-sidebar-hd">Chats activos <button class="btn btn-secondary btn-sm" onclick="toast('📊 Métricas WA exportadas')" style="font-size:9px;padding:2px 7px">Stats</button></div>
+        <div id="waContactList"></div>
+      </div>
+      <div class="wa-main">
+        <div class="wa-chat-hd">
+          <div class="wa-chat-av" id="waAvatar" style="background:linear-gradient(135deg,#25D366,#128C7E)">MR</div>
+          <div>
+            <div class="wa-chat-name" id="waContactName">María Rodríguez — TechCorp</div>
+            <div class="wa-chat-status"><span class="ldot"></span> En línea · Bot IA atendiendo</div>
+          </div>
+          <div class="wa-chat-actions">
+            <div class="wa-bot-badge" id="waBotBadge" onclick="toggleBot()">🤖 Bot IA activo</div>
+            <button class="wa-act" onclick="toggleBot()">👤 Tomar control</button>
+            <button class="wa-act" onclick="toast('🏢 Perfil CRM abierto')">🏢 CRM</button>
+            <button class="wa-act" onclick="toast('📝 Nota interna guardada')">📝 Nota</button>
+          </div>
+        </div>
+        <div class="wa-body" id="waBody"></div>
+        <div class="wa-typing" id="waTyping" style="margin:0 12px 6px">
+          <div class="typing-d"></div><div class="typing-d"></div><div class="typing-d"></div>
+        </div>
+        <div class="wa-input-row">
+          <input class="wa-input" id="waInput" type="text" placeholder="Escribe un mensaje como agente humano...">
+          <button class="wa-send" onclick="sendWA()">➤</button>
+        </div>
+      </div>
+    </div>
+    <div class="wa-metrics">
+      <div class="wm"><div class="wm-val" style="color:var(--green)">94%</div><div class="wm-lbl">Tasa lectura</div></div>
+      <div class="wm"><div class="wm-val" style="color:#60A5FA" id="waMsgCount">847</div><div class="wm-lbl">Mensajes hoy</div></div>
+      <div class="wm"><div class="wm-val" style="color:var(--amber)">38%</div><div class="wm-lbl">Tasa respuesta</div></div>
+      <div class="wm"><div class="wm-val" style="color:var(--cyan)">$0.04</div><div class="wm-lbl">Costo/msg</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CAMPAIGNS ══════════ -->
+<div class="view" id="v-campaigns">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">📡 Campañas Omnicanal</div>
+      <button class="btn btn-primary btn-sm" onclick="openModal('newCamp')">+ Nueva campaña</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px" id="campGrid"></div>
+  </div>
+</div>
+
+<!-- ══════════ ADS ══════════ -->
+<div class="view" id="v-ads">
+  <div class="sec">
+    <div class="sec-title">🎯 Captación — Google Ads &amp; Meta Ads <span class="st-sub">Leads entrando en tiempo real</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+      <div class="card card-p">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(66,133,244,0.14);border:1px solid rgba(66,133,244,0.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#4285F4;flex-shrink:0">G</div>
+          <div><div style="font-size:13px;font-weight:800;color:var(--text)">Google Ads — B2B Colombia</div><div style="font-size:11px;color:var(--text3)">$2,400/mes · <span style="color:var(--green)">● Activa</span></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px">
+          <div class="card card-p" style="text-align:center;padding:8px"><div style="font-family:var(--font);font-size:15px;font-weight:900;color:#60A5FA">284</div><div style="font-size:9px;color:var(--text3)">Leads</div></div>
+          <div class="card card-p" style="text-align:center;padding:8px"><div style="font-family:var(--font);font-size:15px;font-weight:900;color:var(--green)">$8.45</div><div style="font-size:9px;color:var(--text3)">CPL</div></div>
+          <div class="card card-p" style="text-align:center;padding:8px"><div style="font-family:var(--font);font-size:15px;font-weight:900;color:var(--amber)">4.8x</div><div style="font-size:9px;color:var(--text3)">ROAS</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(45,107,228,0.4);width:100%;cursor:default" onclick="toast('4,800 impresiones generadas hoy')">4,800 Impresiones</div>
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(45,107,228,0.52);width:85%;cursor:default" onclick="toast('154 clics recibidos · CTR 3.2%')">154 Clics (3.2%)</div>
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(45,107,228,0.65);width:62%;cursor:default" onclick="toast('284 leads registrados en CRM automáticamente')">284 Leads → CRM</div>
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(16,217,140,0.5);width:42%;cursor:default" onclick="toast('42 oportunidades calificadas por IA')">42 Oportunidades</div>
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(16,217,140,0.72);width:22%;cursor:default" onclick="toast('12 cierres confirmados este mes')">12 Cierres</div>
+        </div>
+      </div>
+      <div class="card card-p">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+          <div style="width:30px;height:30px;border-radius:8px;background:rgba(24,119,242,0.14);border:1px solid rgba(24,119,242,0.28);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#1877F2;flex-shrink:0">f</div>
+          <div><div style="font-size:13px;font-weight:800;color:var(--text)">Meta Ads — Lead Gen LATAM</div><div style="font-size:11px;color:var(--text3)">$1,800/mes · <span style="color:var(--green)">● Activa</span></div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:11px">
+          <div class="card card-p" style="text-align:center;padding:8px"><div style="font-family:var(--font);font-size:15px;font-weight:900;color:#60A5FA">421</div><div style="font-size:9px;color:var(--text3)">Leads</div></div>
+          <div class="card card-p" style="text-align:center;padding:8px"><div style="font-family:var(--font);font-size:15px;font-weight:900;color:var(--green)">$4.28</div><div style="font-size:9px;color:var(--text3)">CPL</div></div>
+          <div class="card card-p" style="text-align:center;padding:8px"><div style="font-family:var(--font);font-size:15px;font-weight:900;color:var(--amber)">3.1x</div><div style="font-size:9px;color:var(--text3)">ROAS</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(24,119,242,0.4);width:100%;cursor:default" onclick="toast('15,000 personas alcanzadas')">15,000 Alcance</div>
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(24,119,242,0.52);width:80%;cursor:default" onclick="toast('420 clics · CTR 2.8%')">420 Clics (2.8%)</div>
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(24,119,242,0.65);width:58%;cursor:default" onclick="toast('421 leads en CRM · Calificación automática IA')">421 Leads → CRM</div>
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(16,217,140,0.5);width:38%;cursor:default" onclick="toast('56 oportunidades activas')">56 Oportunidades</div>
+          <div style="height:26px;border-radius:5px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:700;color:#fff;background:rgba(16,217,140,0.72);width:18%;cursor:default" onclick="toast('15 cierres este mes')">15 Cierres</div>
+        </div>
+      </div>
+    </div>
+    <div class="flow-row">
+      <div style="font-size:12px;font-weight:800;color:var(--green);width:100%;margin-bottom:6px">⚡ Flujo automático — Lead a Cierre en tiempo real</div>
+      <div class="fl-step">1. Lead entra en Ads</div><div class="fl-arr">→</div>
+      <div class="fl-step">2. CRM automático</div><div class="fl-arr">→</div>
+      <div class="fl-step" style="border-color:rgba(139,92,246,0.3);color:var(--purple)">3. IA califica BANT</div><div class="fl-arr">→</div>
+      <div class="fl-step" style="border-color:rgba(37,211,102,0.3);color:var(--wa)">4. WhatsApp auto</div><div class="fl-arr">→</div>
+      <div class="fl-step">5. Seguimiento IA</div><div class="fl-arr">→</div>
+      <div class="fl-step" style="border-color:rgba(16,217,140,0.35);color:var(--green);font-weight:800">6. 💰 Cierre</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ AGENTS ══════════ -->
+<div class="view" id="v-agents">
+  <div class="sec">
+    <div class="sec-title">🦾 Agentes IA Autónomos <span class="st-sub">4 activos en este momento</span></div>
+    <div class="agents-grid">
+      <div class="agent-card on purple-glow" onclick="toggleAgent(this,'Calificador')"><div class="ag-icon">🎯</div><div class="ag-name">Calificador de Leads</div><div class="ag-desc">BANT automático · Scoring IA · Enriquecimiento · Asignación por segmento y potencial</div><div class="ag-stat">✅ 47 leads calificados hoy</div><div class="ag-toggle"><span style="font-size:11px;color:var(--green);font-weight:700">Activo</span><div class="sw on"></div></div></div>
+      <div class="agent-card on" onclick="toggleAgent(this,'Seguimiento')"><div class="ag-icon">🔄</div><div class="ag-name">Seguimiento Automático</div><div class="ag-desc">Secuencias follow-up · Re-engagement · Cambio de canal por comportamiento</div><div class="ag-stat">✅ 12 secuencias activas</div><div class="ag-toggle"><span style="font-size:11px;color:var(--green);font-weight:700">Activo</span><div class="sw on"></div></div></div>
+      <div class="agent-card on" onclick="toggleAgent(this,'Dialer')"><div class="ag-icon">📞</div><div class="ag-name">Power Dialer IA</div><div class="ag-desc">Llamadas automáticas · Transcripción post-llamada · Resumen y próximo paso</div><div class="ag-stat">✅ 8 llamadas programadas</div><div class="ag-toggle"><span style="font-size:11px;color:var(--green);font-weight:700">Activo</span><div class="sw on"></div></div></div>
+      <div class="agent-card" onclick="toggleAgent(this,'Propuestas')"><div class="ag-icon">📄</div><div class="ag-name">Generador Propuestas</div><div class="ag-desc">Propuestas personalizadas por perfil CRM · Envío automático post-demo</div><div class="ag-stat">⏸ 3 propuestas pendientes</div><div class="ag-toggle"><span id="propToggleLbl" style="font-size:11px;color:var(--text3);font-weight:700">Inactivo</span><div class="sw" id="propToggleSw"></div></div></div>
+      <div class="agent-card on" onclick="toggleAgent(this,'Upsell')"><div class="ag-icon">💡</div><div class="ag-name">Recomendador Upsell</div><div class="ag-desc">Cross-sell y upsell inteligente por señales de uso, tamaño y comportamiento</div><div class="ag-stat">✅ 3 oportunidades detectadas</div><div class="ag-toggle"><span style="font-size:11px;color:var(--green);font-weight:700">Activo</span><div class="sw on"></div></div></div>
+      <div class="agent-card" onclick="toggleAgent(this,'Recuperador')"><div class="ag-icon">🔁</div><div class="ag-name">Recuperador Leads</div><div class="ag-desc">Detecta leads sin actividad +15 días y activa secuencia reactivación multicanal</div><div class="ag-stat">⏸ 28 leads para recuperar</div><div class="ag-toggle"><span id="recovToggleLbl" style="font-size:11px;color:var(--text3);font-weight:700">Inactivo</span><div class="sw" id="recovToggleSw"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ VOIP ══════════ -->
+<div class="view" id="v-voip">
+  <div class="sec">
+    <div class="sec-title">📞 VoIP + Asterisk + Softphone <span class="st-sub">3 líneas activas</span></div>
+    <div class="voip-wrap">
+      <div class="card card-p" style="text-align:center">
+        <div class="sp-status"><span class="ldot"></span>Disponible</div>
+        <div class="sp-display" id="dialDisplay">_</div>
+        <div class="dialpad">
+          <button class="dp-btn" onclick="dialPress('1')">1<div class="dp-sub"></div></button>
+          <button class="dp-btn" onclick="dialPress('2')">2<div class="dp-sub">ABC</div></button>
+          <button class="dp-btn" onclick="dialPress('3')">3<div class="dp-sub">DEF</div></button>
+          <button class="dp-btn" onclick="dialPress('4')">4<div class="dp-sub">GHI</div></button>
+          <button class="dp-btn" onclick="dialPress('5')">5<div class="dp-sub">JKL</div></button>
+          <button class="dp-btn" onclick="dialPress('6')">6<div class="dp-sub">MNO</div></button>
+          <button class="dp-btn" onclick="dialPress('7')">7<div class="dp-sub">PQRS</div></button>
+          <button class="dp-btn" onclick="dialPress('8')">8<div class="dp-sub">TUV</div></button>
+          <button class="dp-btn" onclick="dialPress('9')">9<div class="dp-sub">WXYZ</div></button>
+          <button class="dp-btn" onclick="dialPress('*')">*</button>
+          <button class="dp-btn" onclick="dialPress('0')">0</button>
+          <button class="dp-btn" onclick="dialPress('#')">#</button>
+        </div>
+        <button class="call-btn" id="callBtn" onclick="makeCall()">📞 Llamar</button>
+        <button class="end-btn" id="endBtn" onclick="endCall()">📵 Colgar</button>
+        <div style="display:flex;gap:6px;justify-content:center;margin-top:8px">
+          <button class="btn btn-secondary btn-sm" onclick="toast('🔇 Micrófono silenciado')">🔇 Mute</button>
+          <button class="btn btn-secondary btn-sm" onclick="toast('⏸ En espera')">⏸ Hold</button>
+          <button class="btn btn-secondary btn-sm" onclick="toast('🔀 Transfiriendo...')">🔀 Xfer</button>
+        </div>
+      </div>
+      <div class="card" style="overflow:hidden">
+        <div style="padding:10px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:13px;font-weight:800;color:var(--text)">Historial de llamadas</div>
+          <button class="btn btn-secondary btn-sm" onclick="toast('📊 Reporte exportado')">Exportar</button>
+        </div>
+        <div class="call-row" onclick="toast('📋 Resumen IA: 4:32 min · Interés alto · Acción: enviar propuesta hoy')"><div style="color:var(--green);font-size:14px;width:20px">↗</div><div><div style="font-size:12px;font-weight:700;color:var(--text)">María Rodríguez</div><div style="font-size:10px;color:var(--text3)">+57 310 842 9180 · TechCorp</div></div><div style="margin-left:auto;text-align:right"><div style="font-size:12px;font-weight:700;color:var(--text2)">4:32</div><div style="font-size:10px;color:var(--text3)">Hoy 09:15</div></div></div>
+        <div class="call-row" onclick="toast('📋 Llamada perdida — WA automático enviado 30 seg después')"><div style="color:var(--red);font-size:14px;width:20px">✗</div><div><div style="font-size:12px;font-weight:700;color:var(--text)">Carlos Pérez</div><div style="font-size:10px;color:var(--text3)">+57 301 420 8844 · Náutica</div></div><div style="margin-left:auto;text-align:right"><div style="font-size:12px;font-weight:700;color:var(--red)">Perdida</div><div style="font-size:10px;color:var(--text3)">Hoy 09:02</div></div></div>
+        <div class="call-row" onclick="toast('📋 Demo agendada jueves 10am · IA preparó propuesta personalizada')"><div style="color:var(--green);font-size:14px;width:20px">↗</div><div><div style="font-size:12px;font-weight:700;color:var(--text)">Ana Martínez</div><div style="font-size:10px;color:var(--text3)">+57 316 225 7740 · InnovaLog</div></div><div style="margin-left:auto;text-align:right"><div style="font-size:12px;font-weight:700;color:var(--text2)">7:18</div><div style="font-size:10px;color:var(--text3)">Ayer 16:44</div></div></div>
+        <div class="call-row" onclick="toast('📋 Llamada entrante · CRM actualizado automáticamente')"><div style="color:#60A5FA;font-size:14px;width:20px">↙</div><div><div style="font-size:12px;font-weight:700;color:var(--text)">Pedro Gómez</div><div style="font-size:10px;color:var(--text3)">+57 300 182 9834 · Dist. Sur</div></div><div style="margin-left:auto;text-align:right"><div style="font-size:12px;font-weight:700;color:var(--text2)">2:44</div><div style="font-size:10px;color:var(--text3)">Ayer 14:20</div></div></div>
+        <div class="call-row" onclick="toast('📋 Propuesta aceptada en llamada · Contrato enviado · Cierre inminente')"><div style="color:var(--green);font-size:14px;width:20px">↗</div><div><div style="font-size:12px;font-weight:700;color:var(--text)">Sandra Lima</div><div style="font-size:10px;color:var(--text3)">+57 314 890 2241 · Al. Frescos</div></div><div style="margin-left:auto;text-align:right"><div style="font-size:12px;font-weight:700;color:var(--text2)">12:06</div><div style="font-size:10px;color:var(--text3)">Lun 11:30</div></div></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:9px 13px;border-top:1px solid var(--border)">
+          <div style="text-align:center"><div style="font-family:var(--font);font-size:16px;font-weight:900;color:var(--green)">62%</div><div style="font-size:10px;color:var(--text3)">Contactabilidad</div></div>
+          <div style="text-align:center"><div style="font-family:var(--font);font-size:16px;font-weight:900;color:#60A5FA">4:32</div><div style="font-size:10px;color:var(--text3)">Duración prom.</div></div>
+          <div style="text-align:center"><div style="font-family:var(--font);font-size:16px;font-weight:900;color:var(--amber)">156</div><div style="font-size:10px;color:var(--text3)">Llamadas hoy</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ ANALYTICS ══════════ -->
+<div class="view" id="v-analytics">
+  <div class="sec">
+    <div class="sec-hd">
+      <div class="sec-title">📊 Analítica Ejecutiva <span class="st-sub">Power BI · Tiempo real</span></div>
+      <button class="ai-btn btn-sm" onclick="toast('✦ IA: WhatsApp +38% conversión vs email · Leads GA cierran 2.4x más rápido · Mejor contacto: 9-11am')"><span>✦</span> Insights IA</button>
+    </div>
+    <div class="analytics-grid">
+      <div class="chart-card">
+        <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:11px;display:flex;justify-content:space-between">Leads por día <span style="font-size:10px;color:var(--text3)">Últimos 7 días</span></div>
+        <div class="bar-chart" id="barLeads"></div>
+      </div>
+      <div class="chart-card">
+        <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:11px">Canales de origen</div>
+        <div style="display:flex;align-items:center;gap:18px">
+          <svg width="96" height="96" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="17"/>
+            <circle cx="50" cy="50" r="36" fill="none" stroke="#25D366" stroke-width="17" stroke-dasharray="82 144" stroke-dashoffset="-5"/>
+            <circle cx="50" cy="50" r="36" fill="none" stroke="#2D6BE4" stroke-width="17" stroke-dasharray="54 172" stroke-dashoffset="-93"/>
+            <circle cx="50" cy="50" r="36" fill="none" stroke="#F5A623" stroke-width="17" stroke-dasharray="34 192" stroke-dashoffset="-153"/>
+            <circle cx="50" cy="50" r="36" fill="none" stroke="#8B5CF6" stroke-width="17" stroke-dasharray="24 202" stroke-dashoffset="-193"/>
+            <text x="50" y="55" text-anchor="middle" fill="#EEF2FF" font-size="13" font-weight="900" font-family="Cabinet Grotesk">38%</text>
+          </svg>
+          <div style="flex:1">
+            <div class="legend-item"><div class="leg-dot" style="background:#25D366"></div>WhatsApp<span class="leg-val">38%</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:#2D6BE4"></div>Email<span class="leg-val">25%</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:#F5A623"></div>Llamadas<span class="leg-val">16%</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:#8B5CF6"></div>Bot IA<span class="leg-val">11%</span></div>
+            <div class="legend-item"><div class="leg-dot" style="background:#06C8E8"></div>Ads directo<span class="leg-val">10%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:11px">Funnel de conversión</div>
+        <div id="convFunnel" style="display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+      <div class="chart-card">
+        <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:11px;display:flex;justify-content:space-between">Revenue mensual <span style="font-size:10px;color:var(--text3)">Últimos 6 meses</span></div>
+        <div class="bar-chart" id="barRevenue"></div>
+        <div style="background:linear-gradient(135deg,rgba(139,92,246,0.06),rgba(45,107,228,0.06));border:1px solid rgba(139,92,246,0.16);border-radius:var(--rsm);padding:10px;margin-top:9px">
+          <div style="font-size:10px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">✦ Insights IA</div>
+          <div style="font-size:11px;color:var(--text2);padding-left:12px;position:relative;margin-bottom:3px;line-height:1.5"><span style="position:absolute;left:0;color:var(--purple)">›</span>WhatsApp genera 38% más conversiones que email</div>
+          <div style="font-size:11px;color:var(--text2);padding-left:12px;position:relative;margin-bottom:3px;line-height:1.5"><span style="position:absolute;left:0;color:var(--purple)">›</span>Google Ads cierra 2.4x más rápido que Meta</div>
+          <div style="font-size:11px;color:var(--text2);padding-left:12px;position:relative;line-height:1.5"><span style="position:absolute;left:0;color:var(--purple)">›</span>Mejor hora de contacto: 09:00–11:00 AM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PRICING ══════════ -->
+<div class="view" id="v-pricing">
+  <div class="sec">
+    <div style="text-align:center;margin-bottom:26px">
+      <div style="font-size:11px;font-weight:700;color:var(--cyan);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px">Planes y Precios</div>
+      <div style="font-family:var(--font);font-size:26px;font-weight:900;color:var(--text);margin-bottom:6px">Elige tu nivel de crecimiento</div>
+      <div style="font-size:13px;color:var(--text3)">Sin permanencia mínima · Soporte incluido · Setup 6-8 semanas</div>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-plan">Starter</div>
+        <div class="price-val"><small>$</small>400 <small>USD</small></div>
+        <div class="price-sub">/ mes · hasta 3 usuarios</div>
+        <ul class="price-features">
+          <li><span>✅</span>CRM básico + Pipeline</li>
+          <li><span>✅</span>Leads ilimitados</li>
+          <li><span>✅</span>Email marketing básico</li>
+          <li><span>✅</span>1 canal comunicación</li>
+          <li><span>✅</span>Reportes básicos</li>
+          <li><span style="color:var(--text3)">✗</span><span style="color:var(--text3)">WhatsApp API</span></li>
+          <li><span style="color:var(--text3)">✗</span><span style="color:var(--text3)">Agentes IA</span></li>
+          <li><span style="color:var(--text3)">✗</span><span style="color:var(--text3)">VoIP Asterisk</span></li>
+        </ul>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center" onclick="toast('🚀 Plan Starter — Iniciando prueba 14 días gratuitos')">Empezar gratis</button>
+      </div>
+      <div class="price-card featured">
+        <div class="price-plan" style="color:var(--cyan)">Growth</div>
+        <div class="price-val"><small>$</small>900–1,200 <small>USD</small></div>
+        <div class="price-sub">/ mes · hasta 10 usuarios</div>
+        <ul class="price-features">
+          <li><span>✅</span>CRM completo + IA</li>
+          <li><span>✅</span>WhatsApp API + Chatbot</li>
+          <li><span>✅</span>Campañas omnicanal</li>
+          <li><span>✅</span>Multiagente humano+bot</li>
+          <li><span>✅</span>Integración Ads</li>
+          <li><span>✅</span>Analítica intermedia</li>
+          <li><span>✅</span>Propuestas automatizadas</li>
+          <li><span style="color:var(--text3)">✗</span><span style="color:var(--text3)">VoIP Asterisk</span></li>
+        </ul>
+        <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="toast('🌟 Plan Growth — Agendando demo personalizada ahora...')">Solicitar demo</button>
+      </div>
+      <div class="price-card">
+        <div class="price-plan" style="color:var(--purple)">Enterprise AI</div>
+        <div class="price-val"><small>$</small>1,500–2,500 <small>USD</small></div>
+        <div class="price-sub">/ mes · usuarios ilimitados</div>
+        <ul class="price-features">
+          <li><span>✅</span>Todo Growth incluido</li>
+          <li><span>✅</span>Agentes IA autónomos</li>
+          <li><span>✅</span>VoIP Asterisk + Softphone</li>
+          <li><span>✅</span>Analítica Power BI</li>
+          <li><span>✅</span>Recomendador upsell IA</li>
+          <li><span>✅</span>Automatización avanzada</li>
+          <li><span>✅</span>Soporte 24/7 + SLA</li>
+          <li><span>✅</span>NDA disponible</li>
+        </ul>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;border-color:rgba(139,92,246,0.4);color:var(--purple)" onclick="toast('🏢 Enterprise — Te contactamos en menos de 2 horas')">Hablar con ventas</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:20px;padding:18px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r)">
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:6px">¿Listo para transformar tu proceso comercial?</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:13px">Sin permanencia · NDA disponible · Soporte continuo · Onboarding dedicado</div>
+      <button onclick="toast('📅 Reunión agendada con CCG · Confirmación en tu correo en 5 min')" class="btn btn-primary" style="padding:12px 28px;font-size:14px">🚀 Agendar reunión con CCG</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+<!-- New Client Modal -->
+<div class="modal-overlay" id="modal-newClient">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head">
+      <div class="modal-title">🏢 Nuevo Cliente / Lead</div>
+      <button class="modal-close" onclick="closeModal('newClient')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="steps-bar" id="clientStepBar"><div class="step-ind active"></div><div class="step-ind"></div><div class="step-ind"></div></div>
+      <div class="step-lbl-row" id="clientStepLbls"><span class="on">1. Empresa</span><span>2. Contacto</span><span>3. Oportunidad</span></div>
+      <div id="clientStep1">
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Nombre de empresa *</label><input class="form-input" id="c_company" placeholder="Ej: TechCorp Colombia"></div>
+          <div class="form-group"><label class="form-label">Sector *</label><select class="form-select" id="c_sector"><option value="">Seleccionar...</option><option>Software / Tecnología</option><option>Manufactura</option><option>Distribución</option><option>Logística</option><option>Alimentos</option><option>Construcción</option><option>Salud</option><option>Financiero</option><option>Retail / E-commerce</option><option>Otro</option></select></div>
+          <div class="form-group"><label class="form-label">País / Ciudad</label><input class="form-input" id="c_city" placeholder="Bogotá, Colombia"></div>
+          <div class="form-group"><label class="form-label">Tamaño empresa</label><select class="form-select" id="c_size"><option>1-10 empleados</option><option>11-50 empleados</option><option>50-100 empleados</option><option>100-250 empleados</option><option>250-500 empleados</option><option>500+ empleados</option></select></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button class="btn btn-secondary" onclick="closeModal('newClient')">Cancelar</button>
+          <button class="btn btn-primary" onclick="nextClientStep(2)">Siguiente →</button>
+        </div>
+      </div>
+      <div id="clientStep2" style="display:none">
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Nombre contacto *</label><input class="form-input" id="c_name" placeholder="Ej: María Rodríguez"></div>
+          <div class="form-group"><label class="form-label">Cargo</label><input class="form-input" id="c_role" placeholder="Ej: Dir. Comercial"></div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="c_email" type="email" placeholder="maria@empresa.com"></div>
+          <div class="form-group"><label class="form-label">WhatsApp / Teléfono</label><input class="form-input" id="c_phone" placeholder="+57 310 000 0000"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button class="btn btn-secondary" onclick="nextClientStep(1)">← Atrás</button>
+          <button class="btn btn-primary" onclick="nextClientStep(3)">Siguiente →</button>
+        </div>
+      </div>
+      <div id="clientStep3" style="display:none">
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Valor estimado (USD)</label><input class="form-input" id="c_value" type="number" placeholder="10000"></div>
+          <div class="form-group"><label class="form-label">Canal de origen</label><select class="form-select" id="c_source"><option>Google Ads</option><option>Meta Ads</option><option>WhatsApp Orgánico</option><option>Referido</option><option>LinkedIn</option><option>Llamada entrante</option><option>Web orgánico</option><option>Otro</option></select></div>
+          <div class="form-group"><label class="form-label">Canal preferido contacto</label><select class="form-select" id="c_channel"><option>WhatsApp</option><option>Email</option><option>Llamada</option><option>Bot IA</option></select></div>
+          <div class="form-group"><label class="form-label">Urgencia</label><select class="form-select" id="c_urgency"><option>Alta (esta semana)</option><option>Media (este mes)</option><option>Baja (próximo trimestre)</option></select></div>
+        </div>
+        <div class="form-group"><label class="form-label">Notas iniciales</label><textarea class="form-textarea" id="c_notes" placeholder="Contexto adicional, necesidades específicas, referido por..."></textarea></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
+          <button class="btn btn-secondary" onclick="nextClientStep(2)">← Atrás</button>
+          <button class="btn btn-primary" onclick="saveNewClient()">✅ Guardar en CRM</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Opportunity Modal -->
+<div class="modal-overlay" id="modal-newOpp">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">📊 Nueva Oportunidad</div>
+      <button class="modal-close" onclick="closeModal('newOpp')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Empresa *</label><select class="form-select" id="opp_company"><option value="">Seleccionar...</option></select></div>
+        <div class="form-group"><label class="form-label">Etapa inicial</label><select class="form-select" id="opp_stage"><option>Prospecto</option><option>Contactado</option><option>Negociación</option><option>Propuesta</option></select></div>
+        <div class="form-group"><label class="form-label">Valor (USD)</label><input class="form-input" id="opp_value" type="number" placeholder="12000"></div>
+        <div class="form-group"><label class="form-label">Probabilidad %</label><input class="form-input" id="opp_prob" type="number" placeholder="25" min="0" max="100"></div>
+        <div class="form-group"><label class="form-label">Canal principal</label><select class="form-select" id="opp_channel"><option>WhatsApp</option><option>Email</option><option>Llamada</option><option>Bot IA</option></select></div>
+        <div class="form-group"><label class="form-label">Responsable</label><input class="form-input" id="opp_owner" placeholder="Carlos García"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+        <button class="btn btn-secondary" onclick="closeModal('newOpp')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveNewOpp()">Agregar al Pipeline</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New WA Conversation Modal -->
+<div class="modal-overlay" id="modal-newWA">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">💬 Nueva Conversación WA</div>
+      <button class="modal-close" onclick="closeModal('newWA')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Contacto</label><select class="form-select" id="wa_contact_sel"></select></div>
+      <div class="form-group"><label class="form-label">Plantilla de inicio</label><select class="form-select" id="wa_template"><option value="welcome">Bienvenida B2B</option><option value="demo">Invitación a Demo</option><option value="followup">Seguimiento post-contacto</option><option value="reactivate">Reactivación lead frío</option></select></div>
+      <div class="form-group"><label class="form-label">Nota interna</label><textarea class="form-textarea" id="wa_note" placeholder="Contexto para el agente..."></textarea></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-secondary" onclick="closeModal('newWA')">Cancelar</button>
+        <button class="btn btn-primary" onclick="startNewWA()">Iniciar conversación</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Campaign Modal -->
+<div class="modal-overlay" id="modal-newCamp">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">📡 Nueva Campaña</div>
+      <button class="modal-close" onclick="closeModal('newCamp')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Nombre de la campaña *</label><input class="form-input" id="camp_name" placeholder="Ej: Reactivación Q2 2025"></div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Segmento</label><select class="form-select" id="camp_seg"><option>Todos los leads</option><option>Leads fríos +30 días</option><option>Clientes activos</option><option>Prospectos sin contacto</option></select></div>
+        <div class="form-group"><label class="form-label">Objetivo</label><select class="form-select" id="camp_goal"><option>Agendar demo</option><option>Calificar lead</option><option>Upsell / cross-sell</option><option>Reactivar cliente</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Canales</label>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:4px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer"><input type="checkbox" id="ch_wa" checked> WhatsApp</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer"><input type="checkbox" id="ch_email"> Email</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer"><input type="checkbox" id="ch_sms"> SMS</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2);cursor:pointer"><input type="checkbox" id="ch_call"> Llamada</label>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+        <button class="btn btn-secondary" onclick="closeModal('newCamp')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveNewCamp()">🚀 Crear y activar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+// GLOBAL STATE
+// ═══════════════════════════════════
+const state = {
+  clients: [
+    {id:1,company:'TechCorp Colombia',sector:'Software',city:'Bogotá, CO',size:'250-500',contact:'María Rodríguez',role:'Dir. Comercial',email:'maria@techcorp.co',phone:'+57 310 842 9180',value:24000,source:'Google Ads',channel:'WhatsApp',status:'hot',stage:'Prospecto',notes:'Interesada en plan Enterprise. BANT calificado.',avatar:'TC',color:'linear-gradient(135deg,#2D6BE4,#06C8E8)',tl:[{txt:'Lead captado via Google Ads',t:'Hace 2h',c:'g'},{txt:'IA enriqueció perfil: 250 emp, LinkedIn verificado',t:'Hace 2h',c:''},{txt:'WA automático enviado: Plantilla Bienvenida',t:'Hace 1h55',c:'a'},{txt:'María respondió: "Sí, me interesa"',t:'Hace 1h30',c:''},{txt:'BANT calificado: Budget ✓ Auth ✓ Need ✓ Timeline Q1 ✓',t:'Hace 1h28',c:'g'}]},
+    {id:2,company:'Multipacking S.A.',sector:'Manufactura',city:'Medellín, CO',size:'100-250',contact:'Juan Ríos',role:'Dir. TI',email:'j.rios@multipacking.co',phone:'+57 312 445 8820',value:12000,source:'Referido',channel:'Email',status:'client',stage:'Cliente activo',notes:'Plan Growth activo. Candidato upsell VoIP.',avatar:'MP',color:'linear-gradient(135deg,#10D98C,#06C8E8)',tl:[{txt:'Onboarding completado — Plan Growth',t:'Hace 15 días',c:'g'},{txt:'WA API configurada: 5 plantillas aprobadas',t:'Hace 14 días',c:''},{txt:'Primera campaña: 1,200 contactos · 42% apertura',t:'Hace 10 días',c:'g'},{txt:'IA detectó oportunidad upsell: VoIP Asterisk',t:'Hace 3 días',c:'a'}]},
+    {id:3,company:'Grupo Náutica',sector:'Distribución',city:'Barranquilla, CO',size:'50-100',contact:'Carlos Pérez',role:'Gerente General',email:'cperez@gnautica.co',phone:'+57 301 420 8844',value:8500,source:'Meta Ads',channel:'Llamada',status:'warm',stage:'Contactado',notes:'Interés medio. Pendiente demo esta semana.',avatar:'GN',color:'linear-gradient(135deg,#F5A623,#EF5350)',tl:[{txt:'Lead Meta Ads · Colombia',t:'Hace 5h',c:'g'},{txt:'Llamada inicial: 3 min · interés medio',t:'Hace 4h',c:''},{txt:'Propuesta enviada · Vista 1 vez',t:'Hace 2h',c:'a'},{txt:'Sin respuesta · Secuencia reactivación programada',t:'Hace 30min',c:''}]},
+    {id:4,company:'InnovaLogística',sector:'Logística',city:'Cali, CO',size:'100-250',contact:'Ana Martínez',role:'CEO',email:'ana@inno-log.co',phone:'+57 316 225 7740',value:15700,source:'WhatsApp Orgánico',channel:'Bot IA',status:'hot',stage:'Calificado',notes:'Score IA 87. Demo agendada jueves 10am.',avatar:'IL',color:'linear-gradient(135deg,#8B5CF6,#2D6BE4)',tl:[{txt:'Lead via WhatsApp orgánico',t:'Ayer',c:'g'},{txt:'Bot IA calificó: necesidad crítica detectada',t:'Ayer',c:'p'},{txt:'Score IA: 87/100 — asignado como HOT',t:'Ayer',c:''},{txt:'Demo agendada jueves 10am',t:'Hoy 09:00',c:'g'}]},
+    {id:5,company:'Alimentos Frescos',sector:'Alimentos',city:'Bogotá, CO',size:'50-100',contact:'Sandra Lima',role:'Dir. General',email:'slima@alimfrescos.co',phone:'+57 314 890 2241',value:42000,source:'Meta Ads',channel:'WhatsApp',status:'warm',stage:'En negociación',notes:'Propuesta $42K/año enviada. CFO revisando.',avatar:'AF',color:'linear-gradient(135deg,#EF5350,#F5A623)',tl:[{txt:'Lead Meta Ads calificado por Bot IA',t:'Hace 3 días',c:'g'},{txt:'Demo 45 min · reacción muy positiva',t:'Hace 2 días',c:''},{txt:'Propuesta enviada · Sandra solicita reunión con CFO',t:'Ayer',c:'a'},{txt:'IA programó follow-up para mañana 9am',t:'Hoy',c:''}]},
+    {id:6,company:'ConstruMax RD',sector:'Construcción',city:'Bogotá, CO',size:'250-500',contact:'Roberto Silva',role:'VP Operaciones',email:'rsilva@construmax.co',phone:'+57 300 182 9834',value:22000,source:'Web orgánico',channel:'Email',status:'cold',stage:'Frío',notes:'Sin actividad 8 días. Cambiar a WhatsApp.',avatar:'CM',color:'linear-gradient(135deg,#26C6DA,#06C8E8)',tl:[{txt:'Lead formulario web',t:'Hace 9 días',c:'g'},{txt:'Email enviado — sin apertura',t:'Hace 8 días',c:''},{txt:'Segundo email — abierto 8 días después',t:'Hace 1 día',c:'a'},{txt:'Sin respuesta · IA recomienda: cambiar a WA',t:'Hoy',c:''}]}
+  ],
+  pipeline: {
+    'Prospecto':[],
+    'Contactado':[],
+    'Negociación':[],
+    'Propuesta':[],
+    'Cerrado ✓':[]
+  },
+  waChatMode: 'bot', // 'bot' or 'human'
+  selectedWAContact: 0,
+  campaigns: [
+    {name:'Reactivación B2B Q1',status:'active',channels:['WhatsApp','Email','SMS'],sent:1240,total:1500,open:'28.4%',click:'8.2%',conv:'3.1%'},
+    {name:'Demo Request — Tech',status:'active',channels:['WhatsApp','Bot IA'],sent:640,total:800,open:'42.1%',click:'14.8%',conv:'6.4%'},
+    {name:'Upsell WhatsApp API',status:'paused',channels:['Email','Llamada'],sent:280,total:500,open:'18%',click:'4.2%',conv:'1.8%'},
+    {name:'Nurturing Leads Fríos',status:'draft',channels:['Email','WhatsApp'],sent:0,total:420,open:'—',click:'—',conv:'—'}
+  ]
+};
+
+// Seed pipeline from clients
+state.clients.forEach(c=>{
+  const stage = c.stage === 'Cliente activo' ? 'Cerrado ✓' : (c.stage in state.pipeline ? c.stage : 'Prospecto');
+  const channels = {'WhatsApp':'wa','Email':'email','Llamada':'call','Bot IA':'bot'};
+  state.pipeline[stage].push({company:c.company,contact:c.contact,value:'$'+c.value.toLocaleString(),prob:stage==='Cerrado ✓'?'✓':(Math.floor(Math.random()*40)+20)+'%',channel:channels[c.channel]||'wa',id:c.id});
+});
+// Add closed deals
+state.pipeline['Cerrado ✓'].push({company:'LogiStar SAS ✓',contact:'Plan Enterprise AI',value:'$18,000',prob:'✓',channel:'wa'},{company:'DataFleet Corp ✓',contact:'Plan Starter',value:'$8,400',prob:'✓',channel:'email'});
+
+// ═══════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════
+function goView(id, btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('v-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='analytics') buildCharts();
+  if(id==='pipeline') renderPipeline();
+  if(id==='crm') renderCRM();
+  if(id==='whatsapp') initWA();
+  if(id==='campaigns') renderCampaigns();
+}
+
+// ═══════════════════════════════════
+// THEME
+// ═══════════════════════════════════
+function toggleTheme(){
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme')==='dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+
+  const knob = document.getElementById('themeKnob');
+  const sw   = document.getElementById('themeSwitch');
+  if(knob && sw){
+    if(newTheme === 'light'){
+      knob.style.left = '21px';
+      knob.style.background = '#F59E0B';
+      sw.style.background = 'rgba(245,158,11,0.18)';
+      sw.style.borderColor = 'rgba(245,158,11,0.4)';
+    } else {
+      knob.style.left = '3px';
+      knob.style.background = '#8B5CF6';
+      sw.style.background = 'rgba(139,92,246,0.18)';
+      sw.style.borderColor = 'rgba(139,92,246,0.4)';
+    }
+  }
+  toast((newTheme==='light' ? '☀️ Modo claro' : '🌙 Modo oscuro') + ' activado');
+}
+
+// ═══════════════════════════════════
+// TOAST
+// ═══════════════════════════════════
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// ═══════════════════════════════════
+// KPI ANIMATION
+// ═══════════════════════════════════
+function animKPI(id,target,pre='',suf='',dur=1100){
+  const el=document.getElementById(id); if(!el)return;
+  const s=Date.now();
+  const run=()=>{
+    const p=Math.min((Date.now()-s)/dur,1),e=1-Math.pow(1-p,3);
+    el.textContent=pre+Math.floor(e*target).toLocaleString()+suf;
+    if(p<1)requestAnimationFrame(run);
+  };
+  requestAnimationFrame(run);
+}
+function buildSpark(id,vals){
+  const el=document.getElementById(id); if(!el)return;
+  const mx=Math.max(...vals);
+  vals.forEach((v,i)=>{
+    const b=document.createElement('div'); b.className='sbar'+(i===vals.length-1?' hi':'');
+    b.style.height=Math.max(3,Math.round((v/mx)*20))+'px'; el.appendChild(b);
+  });
+}
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    animKPI('kLeads',47); animKPI('kOpps',31); animKPI('kSales',3);
+    animKPI('kConv',18,'','%'); animKPI('kWA',847); animKPI('kCalls',156);
+    animKPI('kEmails',24,'','%'); animKPI('kRev',284,'$','K');
+    buildSpark('sp1',[22,35,28,41,38,44,47]);
+    buildSpark('sp2',[18,24,22,28,26,29,31]);
+    buildSpark('sp3',[1,2,1,3,2,2,3]);
+    buildSpark('sp4',[12,14,13,15,16,16,18]);
+    buildSpark('sp5',[420,560,610,720,800,820,847]);
+    buildSpark('sp6',[180,170,165,160,162,155,156]);
+    buildSpark('sp7',[20,22,21,23,24,24,24]);
+    buildSpark('sp8',[180,200,195,220,240,270,284]);
+  },200);
+});
+
+// ═══════════════════════════════════
+// AI PANEL
+// ═══════════════════════════════════
+function showGlobalAI(){
+  const p=document.getElementById('globalAiPanel');
+  p.classList.add('show');
+  toast('✦ Analizando datos en tiempo real...');
+}
+
+// ═══════════════════════════════════
+// PIPELINE
+// ═══════════════════════════════════
+function renderPipeline(){
+  const board=document.getElementById('pipelineBoard');
+  board.innerHTML='';
+  const tagClass={'wa':'ptag-wa','email':'ptag-email','call':'ptag-call','bot':'ptag-bot','new':'ptag-new'};
+  const tagLbl={'wa':'WhatsApp','email':'Email','call':'Llamada','bot':'Bot IA','new':'Nuevo'};
+  const stageColors={'Prospecto':'var(--text3)','Contactado':'#60A5FA','Negociación':'var(--amber)','Propuesta':'var(--purple)','Cerrado ✓':'var(--green)'};
+  Object.entries(state.pipeline).forEach(([stage,cards])=>{
+    const totalVal = cards.reduce((s,c)=>{const n=parseInt((c.value||'0').replace(/\D/g,''));return s+(isNaN(n)?0:n);},0);
+    const col=document.createElement('div'); col.className='pipe-col';
+    col.innerHTML=`<div class="pipe-col-head"><div class="pipe-col-title" style="color:${stageColors[stage]}">${stage} <span class="pipe-col-count">${cards.length}</span></div><div class="pipe-col-val">$${totalVal.toLocaleString()} USD</div></div>`;
+    cards.forEach(c=>{
+      const card=document.createElement('div'); card.className='pcard'+(stage==='Cerrado ✓'?' highlight':'');
+      card.innerHTML=`<div class="pc-company">${c.company}</div><div class="pc-contact">${c.contact}</div><div class="pc-foot"><span class="pc-val">${c.value}</span><span class="pc-prob">${c.prob}</span></div><span class="ptag ${tagClass[c.channel]||'ptag-wa'}">${tagLbl[c.channel]||'WA'}</span>`;
+      card.onclick=()=>{toast(`📋 ${c.company} · ${c.value} · ${stage}`)};
+      col.appendChild(card);
+    });
+    if(stage!=='Cerrado ✓'){
+      const addBtn=document.createElement('button');
+      addBtn.className='btn btn-secondary'; addBtn.style.cssText='width:100%;justify-content:center;font-size:11px;margin-top:6px';
+      addBtn.textContent='+ Agregar'; addBtn.onclick=()=>openModal('newOpp');
+      col.appendChild(addBtn);
+    }
+    board.appendChild(col);
+  });
+}
+
+// ═══════════════════════════════════
+// CRM
+// ═══════════════════════════════════
+function renderCRM(filter=''){
+  const rows=document.getElementById('crmRows');
+  rows.innerHTML='';
+  const filtered=state.clients.filter(c=>!filter||c.company.toLowerCase().includes(filter.toLowerCase())||c.contact.toLowerCase().includes(filter.toLowerCase()));
+  filtered.forEach((c,i)=>{
+    const row=document.createElement('div'); row.className='crm-row'+(i===0&&!filter?' active':'');
+    row.innerHTML=`<div class="crm-av" style="background:${c.color}">${c.avatar}</div><div style="flex:1;min-width:0"><div class="crm-rname">${c.company}</div><div class="crm-rsub">${c.sector}</div></div><div class="cr-status s-${c.status}">${c.status.toUpperCase()}</div>`;
+    row.onclick=()=>{document.querySelectorAll('.crm-row').forEach(r=>r.classList.remove('active'));row.classList.add('active');showClientDetail(c);};
+    rows.appendChild(row);
+  });
+  document.getElementById('crmCount').textContent=`${filtered.length} registros`;
+  if(filtered.length>0) showClientDetail(filtered[0]);
+}
+function filterCRM(v){renderCRM(v);}
+function showClientDetail(c){
+  const d=document.getElementById('crmDetail');
+  const statusLabel={'hot':'🔥 HOT Lead','warm':'WARM','cold':'FRÍO','client':'Cliente activo','new':'Nuevo'};
+  const statusColor={'hot':'var(--red)','warm':'var(--amber)','cold':'var(--text3)','client':'var(--green)','new':'#60A5FA'};
+  d.innerHTML=`
+    <div class="crm-det-hd">
+      <div class="crm-det-av" style="background:${c.color}">${c.avatar}</div>
+      <div>
+        <div class="crm-det-name">${c.company}</div>
+        <div class="crm-det-sub">${c.city} · ${c.sector} · ${c.size} emp.</div>
+        <div class="crm-det-tags">
+          <span class="dtag" style="background:rgba(239,69,69,0.13);color:${statusColor[c.status]}">${statusLabel[c.status]||c.status}</span>
+          <span class="dtag tag-b2b">B2B</span>
+          <span class="dtag tag-ga">${c.source}</span>
+          <span class="dtag tag-ai">Score IA: ${Math.floor(Math.random()*20)+72}</span>
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" onclick="toast('💬 WhatsApp iniciado con ${c.contact}')">💬 WA</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('newOpp')">+ Oportunidad</button>
+      </div>
+    </div>
+    <div class="crm-fields">
+      <div class="crm-field"><div class="cf-lbl">Contacto</div><div class="cf-val">${c.contact}</div></div>
+      <div class="crm-field"><div class="cf-lbl">Cargo</div><div class="cf-val">${c.role}</div></div>
+      <div class="crm-field"><div class="cf-lbl">Valor opp.</div><div class="cf-val" style="color:var(--green)">$${c.value.toLocaleString()}</div></div>
+      <div class="crm-field"><div class="cf-lbl">Email</div><div class="cf-val">${c.email}</div></div>
+      <div class="crm-field"><div class="cf-lbl">Canal</div><div class="cf-val">${c.channel}</div></div>
+      <div class="crm-field"><div class="cf-lbl">Etapa</div><div class="cf-val">${c.stage}</div></div>
+    </div>
+    <div id="crmAiSection"></div>
+    <div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Historial de actividad</div>
+    <div class="timeline">${c.tl.map(t=>`<div class="tl-item ${t.c}"><div class="tl-dot"></div><div class="tl-text">${t.txt}</div><div class="tl-time">${t.t}</div></div>`).join('')}</div>
+  `;
+}
+function enrichCRM(){
+  const sec=document.getElementById('crmAiSection');
+  if(!sec)return;
+  sec.innerHTML=`<div class="ai-result-panel show" style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:6px;margin-bottom:9px"><span>✦</span><span style="font-size:12px;font-weight:800;color:var(--text)">Enriqueciendo con IA...</span><span class="ai-spin" style="color:var(--purple)">⟳</span></div></div>`;
+  toast('✦ IA analizando empresa y señales de compra...');
+  setTimeout(()=>{
+    sec.innerHTML=`<div class="ai-result-panel show" style="margin-bottom:12px">
+      <div class="ai-block"><div class="ai-block-title">🏢 Perfil verificado</div>
+        <div class="ai-insight">Empresa real · LinkedIn verificado · Crecimiento 22% YoY confirmado</div>
+        <div class="ai-insight">Stack tech: HubSpot + Slack + G-Suite → perfil digital alto</div>
+        <div class="ai-insight">Competidores adoptaron automatización → urgencia de compra elevada</div>
+      </div>
+      <div class="ai-rec">✦ <strong>Gap detectado:</strong> Sin WhatsApp API ni agentes IA. Potencial: <strong>$24K–$36K USD/año</strong>. Contactar en las próximas 4h.</div>
+      <button onclick="this.parentElement.parentElement.innerHTML=''" class="btn btn-secondary" style="font-size:11px;width:100%;justify-content:center;margin-top:6px">Cerrar</button>
+    </div>`;
+  },1800);
+}
+
+// ═══════════════════════════════════
+// CHATBOT IA REAL (API Anthropic)
+// ═══════════════════════════════════
+const SYSTEM_PROMPT = `Eres el asistente virtual de OmniCore AI, una plataforma SaaS premium de gestión comercial omnicanal con inteligencia artificial para empresas B2B en LATAM.
+
+SOBRE OMNICORE AI:
+- Plataforma todo-en-uno: CRM, Pipeline, WhatsApp API, Chatbots, Agentes IA autónomos, VoIP Asterisk+Softphone, Campañas omnicanal, Google Ads/Meta Ads, Analítica tipo Power BI, Propuestas automáticas
+- Planes: Starter $400/mes (3 usuarios), Growth $900-1,200/mes (10 usuarios, incluye WA API + Chatbot), Enterprise AI $1,500-2,500/mes (ilimitado, incluye VoIP + Agentes IA + Power BI)
+- Implementación en 6-8 semanas, sin permanencia mínima, NDA disponible
+- Respuesta de agentes IA en menos de 8 segundos, disponible 24/7
+- Integración con Clientify, HubSpot, Salesforce, Canva, Google Workspace
+- CCG (Contact Center Grupo) es el equipo detrás de OmniCore
+
+INSTRUCCIONES:
+- Responde SIEMPRE en español, de forma conversacional, cálida y profesional
+- Sé específico con precios, características y beneficios
+- Si preguntan por una demo, invítalos a agendar con el equipo CCG
+- Máximo 3-4 párrafos o usa bullets cuando sea útil
+- Destaca siempre el valor de negocio (más ventas, menos tiempo, más eficiencia)
+- Si te preguntan algo que no sabes, redirige amablemente a contactar al equipo`;
+
+let chatHistory = [];
+
+async function sendChat(){
+  const input=document.getElementById('chatInput');
+  const msg=input.value.trim(); if(!msg)return;
+  input.value='';
+  addChatMessage(msg,'user');
+  await callChatAPI(msg);
+}
+async function quickChat(msg){
+  document.getElementById('chatInput').value=msg;
+  await sendChat();
+}
+async function simulateBot(type){
+  const msgs={'lead':'Hola, vi su anuncio en Google y me interesa conocer más sobre la plataforma. Somos una empresa de distribución con 80 empleados en Bogotá.','quote':'Necesito una cotización para nuestra empresa. Tenemos un equipo de ventas de 15 personas y perdemos muchos leads por falta de seguimiento.'};
+  document.getElementById('chatInput').value=msgs[type]||msgs['lead'];
+  await sendChat();
+}
+function addChatMessage(text,role){
+  const cont=document.getElementById('chatMessages');
+  const div=document.createElement('div');
+  const now=new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0');
+  if(role==='user'){
+    div.style.cssText='align-self:flex-end;max-width:78%;background:var(--blue);color:#fff;padding:8px 12px;border-radius:10px 10px 0 10px;font-size:13px;line-height:1.5';
+  }else{
+    div.style.cssText='align-self:flex-start;max-width:82%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 13px;border-radius:0 10px 10px 10px;font-size:13px;line-height:1.55';
+  }
+  div.innerHTML=text.replace(/\n/g,'<br>')+`<div style="font-size:10px;color:${role==='user'?'rgba(255,255,255,0.6)':'var(--text3)'};margin-top:4px;float:right;clear:both">${now}</div>`;
+  cont.appendChild(div);
+  cont.scrollTop=cont.scrollHeight;
+}
+function showChatTyping(show){
+  const t=document.getElementById('chatTyping');
+  t.classList.toggle('show',show);
+  document.getElementById('chatMessages').scrollTop=9999;
+}
+async function callChatAPI(userMsg){
+  chatHistory.push({role:'user',content:userMsg});
+  showChatTyping(true);
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:600,
+        system:SYSTEM_PROMPT,
+        messages:chatHistory
+      })
+    });
+    const data=await resp.json();
+    showChatTyping(false);
+    const reply=data?.content?.[0]?.text||'Disculpa, ocurrió un error. Por favor intenta de nuevo.';
+    chatHistory.push({role:'assistant',content:reply});
+    addChatMessage(reply,'assistant');
+  }catch(e){
+    showChatTyping(false);
+    addChatMessage('Disculpa, hubo un problema de conexión. Por favor verifica e intenta de nuevo.','assistant');
+  }
+}
+function clearChat(){
+  chatHistory=[];
+  document.getElementById('chatMessages').innerHTML=`<div style="align-self:flex-start;max-width:80%;background:var(--bg3);border:1px solid var(--border);border-radius:0 10px 10px 10px;padding:10px 13px;font-size:13px;color:var(--text);line-height:1.55">¡Chat reiniciado! 👋 Soy el asistente de <strong>OmniCore AI</strong>. ¿En qué te puedo ayudar?<div style="font-size:10px;color:var(--text3);margin-top:4px;float:right">ahora</div></div>`;
+  toast('🗑 Chat limpiado');
+}
+
+// ═══════════════════════════════════
+// WHATSAPP MODULE
+// ═══════════════════════════════════
+const waContacts=[
+  {name:'María R.',company:'TechCorp',avatar:'MR',color:'linear-gradient(135deg,#25D366,#128C7E)',unread:2,preview:'Sí, me interesa mucho...'},
+  {name:'Carlos P.',company:'Náutica',avatar:'CP',color:'linear-gradient(135deg,#2D6BE4,#06C8E8)',unread:0,preview:'¿Cuánto cuesta el plan?'},
+  {name:'Ana M.',company:'InnovaLog',avatar:'AM',color:'linear-gradient(135deg,#8B5CF6,#2D6BE4)',unread:0,preview:'Ok, agendo el jueves'},
+  {name:'Sandra L.',company:'Al. Frescos',avatar:'SL',color:'linear-gradient(135deg,#EF5350,#F5A623)',unread:5,preview:'¿Tienen demo disponible?'},
+  {name:'Felipe M.',company:'LogiExpress',avatar:'FM',color:'linear-gradient(135deg,#F5A623,#10D98C)',unread:0,preview:'Envíame la propuesta'}
+];
+const waConversations={
+  0:[{t:'recv',msg:'¡Hola! Vi el anuncio de OmniCore en Google. ¿Me pueden dar más información sobre la plataforma?',time:'09:38'},{t:'bot',msg:'🤖 ¡Hola María! Soy el asistente de OmniCore. Somos una plataforma de gestión comercial con IA. ¿Cuál es el mayor reto de tu equipo de ventas hoy?',time:'09:38'},{t:'recv',msg:'Perdemos muchos leads porque tardamos en responder. Somos 50 personas.',time:'09:40'},{t:'bot',msg:'🤖 ¡Entiendo perfectamente! OmniCore responde en menos de 8 segundos, 24/7 con IA. Ningún lead se pierde. ¿Tienes 20 min esta semana para una demo personalizada?',time:'09:41'},{t:'recv',msg:'Sí, me interesa mucho. ¿Qué planes manejan?',time:'09:42'}],
+  1:[{t:'recv',msg:'Buenos días, ¿cuánto cuesta el plan para 5 usuarios?',time:'09:18'},{t:'bot',msg:'🤖 ¡Hola Carlos! El plan Growth empieza en $900 USD/mes e incluye hasta 10 usuarios, WhatsApp API, chatbot y campañas omnicanal. ¿Te interesa que te explique qué incluye cada plan?',time:'09:18'}],
+  2:[{t:'recv',msg:'Hola, me contactaron sobre la plataforma. ¿Pueden agendar una demo?',time:'16:44'},{t:'bot',msg:'🤖 ¡Claro, Ana! Con gusto agendamos. Tengo disponibilidad jueves a las 10am o viernes a las 3pm. ¿Cuál te funciona mejor?',time:'16:44'},{t:'recv',msg:'Ok, agendo para el jueves 10am.',time:'16:45'}],
+  3:[{t:'recv',msg:'¿Tienen una demo disponible para ver la plataforma?',time:'Lun 14:20'},{t:'bot',msg:'🤖 ¡Hola Sandra! Sí, tenemos demos personalizadas. Toma menos de 30 minutos y puedo mostrarle cómo OmniCore se adapta específicamente al sector de alimentos. ¿Le queda bien esta semana?',time:'Lun 14:21'},{t:'recv',msg:'Perfecto, me interesa. Somos 30 personas en el equipo.',time:'Lun 14:25'},{t:'bot',msg:'🤖 Excelente perfil para nuestro plan Growth. Con 30 usuarios y WhatsApp API, pueden automatizar el 80% del primer contacto. Agendemos esa demo 🎯',time:'Lun 14:26'},{t:'recv',msg:'Ok me puedes enviar más información por aquí?',time:'Lun 14:30'}],
+  4:[{t:'recv',msg:'Hola, estoy interesado en la propuesta que me enviaron.',time:'Lun 11:30'},{t:'bot',msg:'🤖 ¡Hola Felipe! La propuesta está pensada específicamente para el perfil de LogiExpress. ¿Alguna sección que quieras que profundicemos?',time:'Lun 11:30'}]
+};
+function initWA(){
+  renderWAContacts();
+  loadWAConversation(state.selectedWAContact);
+  populateWAContactSelect();
+}
+function renderWAContacts(){
+  const list=document.getElementById('waContactList'); if(!list)return;
+  list.innerHTML='';
+  waContacts.forEach((c,i)=>{
+    const div=document.createElement('div'); div.className='wa-contact'+(i===state.selectedWAContact?' active':'');
+    div.innerHTML=`<div class="wc-av" style="background:${c.color}">${c.avatar}</div><div style="flex:1;min-width:0"><div class="wc-name">${c.name}</div><div class="wc-preview">${c.preview}</div></div>${c.unread>0?`<div class="wc-unread">${c.unread}</div>`:'<div style="font-size:9px;color:var(--text3)">hoy</div>'}`;
+    div.onclick=()=>{state.selectedWAContact=i;document.querySelectorAll('.wa-contact').forEach(e=>e.classList.remove('active'));div.classList.add('active');loadWAConversation(i);};
+    list.appendChild(div);
+  });
+}
+function loadWAConversation(idx){
+  const c=waContacts[idx];
+  document.getElementById('waAvatar').textContent=c.avatar;
+  document.getElementById('waAvatar').style.background=c.color;
+  document.getElementById('waContactName').textContent=c.name+' — '+c.company;
+  const body=document.getElementById('waBody'); if(!body)return;
+  body.innerHTML='';
+  const msgs=waConversations[idx]||[];
+  msgs.forEach(m=>{
+    const div=document.createElement('div'); div.className='wa-msg '+m.t;
+    div.innerHTML=m.msg+`<span class="wa-msg-time">${m.time}</span>`;
+    body.appendChild(div);
+  });
+  body.scrollTop=body.scrollHeight;
+  document.getElementById('waBotBadge').textContent='🤖 Bot IA activo';
+  document.getElementById('waBotBadge').style.background='rgba(139,92,246,0.12)';
+  document.getElementById('waBotBadge').style.color='var(--purple)';
+  state.waChatMode='bot';
+}
+function sendWA(){
+  const inp=document.getElementById('waInput'); if(!inp)return;
+  const msg=inp.value.trim(); if(!msg)return;
+  inp.value='';
+  const body=document.getElementById('waBody'); if(!body)return;
+  const now=new Date(); const time=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  const div=document.createElement('div'); div.className='wa-msg sent';
+  div.innerHTML=msg+`<span class="wa-msg-time">${time} ✓✓</span>`;
+  body.appendChild(div); body.scrollTop=body.scrollHeight;
+  // Update counter
+  const cnt=document.getElementById('waMsgCount');
+  if(cnt) cnt.textContent=parseInt(cnt.textContent)+1;
+  // Bot auto-reply if in bot mode
+  if(state.waChatMode==='bot'){
+    const typing=document.getElementById('waTyping'); if(typing){typing.classList.add('show');body.scrollTop=body.scrollHeight;}
+    setTimeout(()=>{
+      if(typing)typing.classList.remove('show');
+      const replies=['🤖 Recibido! Procesando tu mensaje con IA...','🤖 ¡Gracias! Un momento para darte la mejor respuesta.','🤖 Entendido. Voy a revisar esa información para ti.'];
+      const r=document.createElement('div'); r.className='wa-msg bot';
+      r.innerHTML=replies[Math.floor(Math.random()*replies.length)]+`<span class="wa-msg-time">${time}</span>`;
+      body.appendChild(r); body.scrollTop=body.scrollHeight;
+    },1400);
+  }
+}
+function toggleBot(){
+  state.waChatMode=state.waChatMode==='bot'?'human':'bot';
+  const badge=document.getElementById('waBotBadge');
+  if(state.waChatMode==='human'){
+    badge.innerHTML='👤 Agente: Tú'; badge.style.background='rgba(16,217,140,0.12)'; badge.style.color='var(--green)';
+    toast('👤 Control tomado — Bot pausado para este chat');
+  }else{
+    badge.innerHTML='🤖 Bot IA activo'; badge.style.background='rgba(139,92,246,0.12)'; badge.style.color='var(--purple)';
+    toast('🤖 Bot IA reactivado');
+  }
+}
+function populateWAContactSelect(){
+  const sel=document.getElementById('wa_contact_sel'); if(!sel)return;
+  sel.innerHTML='';
+  waContacts.forEach((c,i)=>{const o=document.createElement('option');o.value=i;o.textContent=c.name+' · '+c.company;sel.appendChild(o);});
+}
+
+// ═══════════════════════════════════
+// CAMPAIGNS
+// ═══════════════════════════════════
+function renderCampaigns(){
+  const grid=document.getElementById('campGrid'); if(!grid)return;
+  grid.innerHTML='';
+  const chColors={'WhatsApp':'background:rgba(37,211,102,0.13);color:#25D366','Email':'background:rgba(45,107,228,0.13);color:#60A5FA','SMS':'background:rgba(245,166,35,0.13);color:var(--amber)','Bot IA':'background:rgba(139,92,246,0.13);color:var(--purple)','Llamada':'background:rgba(239,69,69,0.13);color:var(--red)'};
+  state.campaigns.forEach((c,i)=>{
+    const card=document.createElement('div'); card.className='card card-p';
+    const statusHtml={'active':'<span style="background:rgba(16,217,140,0.13);color:var(--green);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">● Activa</span>','paused':'<span style="background:rgba(245,166,35,0.13);color:var(--amber);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">⏸ Pausada</span>','draft':'<span style="background:rgba(90,112,144,0.13);color:var(--text3);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">○ Borrador</span>'}[c.status]||'';
+    const chHtml=c.channels.map(ch=>`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;${chColors[ch]||''}">${ch}</span>`).join(' ');
+    const pct=c.total>0?Math.round((c.sent/c.total)*100):0;
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:13px;font-weight:800;color:var(--text)">${c.name}</div>${statusHtml}</div>
+      <div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap">${chHtml}</div>
+      <div class="progress-wrap"><div class="progress-lbl"><span>Enviados ${c.sent.toLocaleString()}/${c.total.toLocaleString()}</span><span>${pct}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:var(--grad)"></div></div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px">
+        <div style="background:var(--bg3);border-radius:var(--rsm);padding:7px;text-align:center"><div style="font-family:var(--font);font-size:15px;font-weight:900;color:var(--green)">${c.open}</div><div style="font-size:9px;color:var(--text3)">Apertura</div></div>
+        <div style="background:var(--bg3);border-radius:var(--rsm);padding:7px;text-align:center"><div style="font-family:var(--font);font-size:15px;font-weight:900;color:#60A5FA">${c.click}</div><div style="font-size:9px;color:var(--text3)">Clic</div></div>
+        <div style="background:var(--bg3);border-radius:var(--rsm);padding:7px;text-align:center"><div style="font-family:var(--font);font-size:15px;font-weight:900;color:var(--amber)">${c.conv}</div><div style="font-size:9px;color:var(--text3)">Conversión</div></div>
+      </div>
+      ${c.status==='paused'?`<button class="btn btn-success" style="width:100%;justify-content:center;margin-top:9px" onclick="activateCamp(${i})">▶ Reactivar</button>`:''}
+      ${c.status==='draft'?`<button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:9px" onclick="activateCamp(${i})">🚀 Activar ahora</button>`:''}
+    `;
+    grid.appendChild(card);
+  });
+}
+function activateCamp(i){
+  state.campaigns[i].status='active';
+  state.campaigns[i].sent=Math.floor(state.campaigns[i].total*0.05);
+  renderCampaigns();
+  toast('🚀 Campaña activada — enviando a '+state.campaigns[i].total+' contactos');
+}
+
+// ═══════════════════════════════════
+// AGENTS TOGGLE
+// ═══════════════════════════════════
+function toggleAgent(card,name){
+  const sw=card.querySelector('.sw');
+  const isOn=sw.classList.contains('on');
+  sw.classList.toggle('on',!isOn);
+  card.classList.toggle('on',!isOn);
+  const lbl=card.querySelector('.ag-toggle span');
+  if(lbl){lbl.textContent=isOn?'Inactivo':'Activo';lbl.style.color=isOn?'var(--text3)':'var(--green)';}
+  toast((isOn?'⏸ Agente ':' ✅ Agente ')+name+(isOn?' pausado':' activado'));
+}
+
+// ═══════════════════════════════════
+// VOIP
+// ═══════════════════════════════════
+let dialStr='';
+function dialPress(k){
+  if(dialStr.length>=14)return;
+  dialStr+=k;
+  document.getElementById('dialDisplay').textContent=dialStr||'_';
+}
+function makeCall(){
+  if(!dialStr){toast('⚠️ Ingresa un número primero');return;}
+  document.getElementById('callBtn').style.display='none';
+  document.getElementById('endBtn').style.display='block';
+  document.getElementById('dialDisplay').style.color='var(--green)';
+  toast('📞 Marcando '+dialStr+' vía VoIP Asterisk...');
+}
+function endCall(){
+  document.getElementById('callBtn').style.display='flex';
+  document.getElementById('endBtn').style.display='none';
+  document.getElementById('dialDisplay').style.color='var(--text)';
+  toast('📵 Llamada finalizada · Resumen IA generado automáticamente');
+  dialStr='';
+  document.getElementById('dialDisplay').textContent='_';
+}
+
+// ═══════════════════════════════════
+// ANALYTICS
+// ═══════════════════════════════════
+let chartsBuilt=false;
+function buildCharts(){
+  if(chartsBuilt)return; chartsBuilt=true;
+  // Leads bar
+  const bl=document.getElementById('barLeads');
+  if(bl){const vals=[28,42,35,51,47,56,62],days=['L','M','X','J','V','S','H'],mx=Math.max(...vals);bl.innerHTML='';vals.forEach((v,i)=>{const c=document.createElement('div');c.className='bar-col';const f=document.createElement('div');f.className='bar-fill';f.style.cssText=`height:4px;background:${i===vals.length-1?'var(--grad)':'rgba(45,107,228,0.38)'}`;f.innerHTML=`<span class="bar-lbl">${days[i]}</span>`;c.appendChild(f);bl.appendChild(c);setTimeout(()=>f.style.height=Math.max(6,Math.round((v/mx)*78))+'px',100+i*75);});}
+  // Revenue bar
+  const br=document.getElementById('barRevenue');
+  if(br){const vals=[180,200,195,220,252,284],months=['O','N','D','E','F','M'],mx=Math.max(...vals);br.innerHTML='';vals.forEach((v,i)=>{const c=document.createElement('div');c.className='bar-col';const f=document.createElement('div');f.className='bar-fill';f.style.cssText=`height:4px;background:${i===vals.length-1?'linear-gradient(180deg,var(--green),var(--cyan))':'rgba(16,217,140,0.3)'}`;f.innerHTML=`<span class="bar-lbl">${months[i]}</span>`;c.appendChild(f);br.appendChild(c);setTimeout(()=>f.style.height=Math.max(6,Math.round((v/mx)*78))+'px',100+i*75);});}
+  // Conv funnel
+  const cf=document.getElementById('convFunnel');
+  if(cf){[{l:'Leads nuevos',v:284,p:100,c:'rgba(45,107,228,0.42)'},{l:'Contactados',v:180,p:63,c:'rgba(45,107,228,0.55)'},{l:'Calificados',v:98,p:35,c:'rgba(6,200,232,0.5)'},{l:'Propuesta',v:42,p:15,c:'rgba(16,217,140,0.45)'},{l:'Cerrados',v:18,p:6,c:'rgba(16,217,140,0.72)'}].forEach(s=>{cf.innerHTML+=`<div style="display:flex;align-items:center;gap:8px"><div style="font-size:10px;color:var(--text3);min-width:72px">${s.l}</div><div style="flex:1;height:20px;background:var(--glass2);border-radius:3px;overflow:hidden"><div style="height:100%;width:${s.p}%;background:${s.c};border-radius:3px;display:flex;align-items:center;padding-left:7px;font-size:11px;font-weight:700;color:#fff">${s.v}</div></div><div style="font-size:10px;color:var(--text3);min-width:26px">${s.p}%</div></div>`;});}
+}
+
+// ═══════════════════════════════════
+// MODALS
+// ═══════════════════════════════════
+function openModal(id){
+  // Populate selects
+  if(id==='newOpp'||id==='newWA'){
+    const sel=document.getElementById('opp_company');
+    if(sel){sel.innerHTML='<option value="">Seleccionar...</option>';state.clients.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.company;sel.appendChild(o);});}
+  }
+  document.getElementById('modal-'+id)?.classList.add('open');
+}
+function closeModal(id){document.getElementById('modal-'+id)?.classList.remove('open');}
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// ── Wizard steps ──
+function nextClientStep(step){
+  if(step===2&&!document.getElementById('c_company').value.trim()){toast('⚠️ Ingresa el nombre de la empresa');return;}
+  if(step===3&&!document.getElementById('c_name').value.trim()){toast('⚠️ Ingresa el nombre del contacto');return;}
+  [1,2,3].forEach(s=>{document.getElementById('clientStep'+s).style.display=s===step?'block':'none';});
+  const bars=document.querySelectorAll('#clientStepBar .step-ind');
+  bars.forEach((b,i)=>{b.classList.toggle('done',i<step-1);b.classList.toggle('active',i===step-1);});
+  const lbls=document.querySelectorAll('#clientStepLbls span');
+  lbls.forEach((l,i)=>l.classList.toggle('on',i===step-1));
+}
+
+// ── Save new client ──
+function saveNewClient(){
+  const company=document.getElementById('c_company').value.trim();
+  const contact=document.getElementById('c_name').value.trim();
+  if(!company||!contact){toast('⚠️ Campos obligatorios vacíos');return;}
+  const gradients=['linear-gradient(135deg,#2D6BE4,#8B5CF6)','linear-gradient(135deg,#10D98C,#06C8E8)','linear-gradient(135deg,#F5A623,#EF5350)','linear-gradient(135deg,#EF5350,#8B5CF6)'];
+  const newClient={
+    id:state.clients.length+1,
+    company,sector:document.getElementById('c_sector').value||'Sin sector',
+    city:document.getElementById('c_city').value||'Colombia',
+    size:document.getElementById('c_size').value,
+    contact,role:document.getElementById('c_role').value||'Contacto',
+    email:document.getElementById('c_email').value,phone:document.getElementById('c_phone').value,
+    value:parseInt(document.getElementById('c_value').value)||0,
+    source:document.getElementById('c_source').value,
+    channel:document.getElementById('c_channel').value,
+    urgency:document.getElementById('c_urgency').value,
+    status:'new',stage:'Prospecto',
+    notes:document.getElementById('c_notes').value,
+    avatar:company.substring(0,2).toUpperCase(),
+    color:gradients[Math.floor(Math.random()*gradients.length)],
+    tl:[{txt:`Lead registrado manualmente vía CRM · ${document.getElementById('c_source').value}`,t:'Ahora mismo',c:'g'},{txt:`IA enriqueciendo perfil de ${company}...`,t:'Ahora',c:'p'},{txt:'Canal preferido asignado: '+document.getElementById('c_channel').value,t:'Ahora',c:''}]
+  };
+  state.clients.unshift(newClient);
+  state.pipeline['Prospecto'].unshift({company,contact,value:'$'+(newClient.value||0).toLocaleString(),prob:'25%',channel:newClient.channel.toLowerCase()==='whatsapp'?'wa':newClient.channel.toLowerCase(),id:newClient.id});
+  closeModal('newClient');
+  // Reset form
+  ['c_company','c_city','c_name','c_role','c_email','c_phone','c_value','c_notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  nextClientStep(1);
+  toast('✅ '+company+' agregado al CRM · Agente IA notificado');
+  // Refresh if on CRM view
+  if(document.getElementById('v-crm').classList.contains('active')) renderCRM();
+  if(document.getElementById('v-pipeline').classList.contains('active')) renderPipeline();
+  // Bump KPI
+  const kOpps=document.getElementById('kOpps');
+  if(kOpps)kOpps.textContent=parseInt(kOpps.textContent)+1;
+}
+
+// ── Save new opportunity ──
+function saveNewOpp(){
+  const company=document.getElementById('opp_company').value;
+  const val=document.getElementById('opp_value').value;
+  if(!company||!val){toast('⚠️ Completa empresa y valor');return;}
+  const sel=document.getElementById('opp_company');
+  const companyName=sel.options[sel.selectedIndex]?.text||'Empresa';
+  const stage=document.getElementById('opp_stage').value;
+  const channel=document.getElementById('opp_channel').value.toLowerCase()==='whatsapp'?'wa':'email';
+  state.pipeline[stage].push({company:companyName,contact:document.getElementById('opp_owner').value||'Sin asignar',value:'$'+parseInt(val).toLocaleString(),prob:document.getElementById('opp_prob').value+'%',channel});
+  closeModal('newOpp');
+  toast('🏆 Oportunidad agregada al pipeline · Etapa: '+stage);
+  if(document.getElementById('v-pipeline').classList.contains('active')) renderPipeline();
+}
+
+// ── Save new campaign ──
+function saveNewCamp(){
+  const name=document.getElementById('camp_name').value.trim();
+  if(!name){toast('⚠️ Escribe el nombre de la campaña');return;}
+  const channels=[];
+  if(document.getElementById('ch_wa')?.checked)channels.push('WhatsApp');
+  if(document.getElementById('ch_email')?.checked)channels.push('Email');
+  if(document.getElementById('ch_sms')?.checked)channels.push('SMS');
+  if(document.getElementById('ch_call')?.checked)channels.push('Llamada');
+  state.campaigns.push({name,status:'active',channels,sent:0,total:Math.floor(Math.random()*800)+200,open:'—',click:'—',conv:'—'});
+  closeModal('newCamp');
+  toast('🚀 Campaña "'+name+'" creada y activada');
+  if(document.getElementById('v-campaigns').classList.contains('active')) renderCampaigns();
+}
+
+// ── Start new WA ──
+function startNewWA(){
+  const idx=parseInt(document.getElementById('wa_contact_sel')?.value||'0');
+  state.selectedWAContact=idx;
+  closeModal('newWA');
+  if(document.getElementById('v-whatsapp').classList.contains('active')){
+    renderWAContacts();
+    loadWAConversation(idx);
+  }else{
+    document.querySelectorAll('.ntab')[4]?.click();
+  }
+  toast('💬 Conversación iniciada con '+waContacts[idx]?.name);
+}
+
+// ═══════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('v-chatbot').classList.contains('active')&&document.activeElement===document.getElementById('chatInput'))sendChat();
+  if(e.key==='Enter'&&document.getElementById('v-whatsapp').classList.contains('active')&&document.activeElement===document.getElementById('waInput'))sendWA();
+  if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));
+});
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+
+</script>
+</body>
+</html>

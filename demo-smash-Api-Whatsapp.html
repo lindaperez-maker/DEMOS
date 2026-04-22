@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smash Burger RD - AI Demo Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Paleta Oscura (Por defecto) */
+            --red: #FF3B30; /* Rojo más vibrante */
+            --gold: #FFCC00; /* Dorado brillante */
+            --green: #34C759; /* Verde vibrante y apetitoso */
+            --green-dark: #128C7E;
+            --purple: #AF52DE;
+            --blue: #5AC8FA;
+            --bg: #0D0D0D;
+            --card: #232323;
+            --card-hover: #2C2C2C;
+            --text: #F9FAFB;
+            --text-muted: #9CA3AF;
+            --border: #374151;
+            --wa-bg: #0b141a;
+            --wa-msg-in: #202c33;
+            --wa-msg-out: #005c4b;
+            --tracker-bg: #1E1E1E;
+        }
+
+        body.day {
+            /* Paleta Clara */
+            --bg: #F3F4F6;
+            --card: #FFFFFF;
+            --card-hover: #F9FAFB;
+            --text: #111827;
+            --text-muted: #4B5563;
+            --border: #D1D5DB;
+            --wa-bg: #efeae2;
+            --wa-msg-in: #ffffff;
+            --wa-msg-out: #d9fdd3;
+            --tracker-bg: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        h1, h2, h3, .metric {
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* --- TOAST NOTIFICATION (Mejorado y reubicado) --- */
+        #toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            left: auto;
+            transform: translateX(150%);
+            background-color: var(--green);
+            color: #000000;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1000;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #toast.show { transform: translateX(0); }
+        #toast-icon { font-size: 20px; }
+
+        /* Topbar */
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; background-color: var(--card);
+            border-bottom: 1px solid var(--border); z-index: 10; height: 60px;
+        }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo { color: var(--red); font-size: 26px; }
+        
+        .live-indicator { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--green); font-weight: 700; }
+        .dot { width: 8px; height: 8px; background-color: var(--green); border-radius: 50%; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .theme-switch {
+            cursor: pointer; background: var(--bg); border: 1px solid var(--border);
+            padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+            color: var(--text); display: flex; align-items: center; gap: 6px; font-family: 'Outfit';
+        }
+
+        .top-nav { display: none; gap: 20px; }
+        .nav-btn {
+            background: none; border: none; color: var(--text-muted); font-family: 'Outfit', sans-serif;
+            font-weight: 600; font-size: 16px; cursor: pointer; padding: 5px 10px; transition: color 0.2s;
+        }
+        .nav-btn:hover { color: var(--text); }
+        .nav-btn.active { color: var(--gold); border-bottom: 2px solid var(--gold); }
+
+        /* Bottom Nav (Mobile) */
+        .bottom-nav {
+            display: flex; justify-content: space-around; background-color: var(--card);
+            padding: 12px 0; position: fixed; bottom: 0; width: 100%;
+            border-top: 1px solid var(--border); z-index: 10;
+        }
+        .bottom-nav .nav-btn { font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .bottom-nav .nav-btn.active { color: var(--gold); border-bottom: none; }
+
+        /* Contenido Principal */
+        .main-content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px; }
+        .view { display: none; animation: fadeIn 0.4s ease-out; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- VISTA 1: CHAT --- */
+        .chat-layout { display: flex; flex-direction: column; gap: 25px; height: 100%; }
+        
+        .chat-header-kpis {
+            display: flex; justify-content: space-between; background: var(--card);
+            padding: 15px 25px; border-radius: 12px; border: 1px solid var(--border);
+        }
+        .kpi-item { text-align: center; }
+        .kpi-value { font-size: 26px; color: var(--green); font-family: 'Bebas Neue'; }
+
+        .main-panels { display: flex; flex-direction: column; gap: 20px; align-items: center; width: 100%; }
+        .phone-wrapper { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 320px; }
+        
+        .iphone {
+            width: 100%; height: 580px; border: 8px solid #1f2937; border-radius: 40px;
+            background-color: var(--wa-bg); position: relative; overflow: hidden;
+            display: flex; flex-direction: column; box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+        .notch {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 25px;
+            background-color: #1f2937; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; z-index: 2;
+        }
+        .wa-header {
+            background-color: var(--green-dark); color: white; padding: 35px 15px 10px 15px;
+            display: flex; align-items: center; gap: 10px; font-weight: 600;
+        }
+        .wa-avatar { width: 36px; height: 36px; background-color: var(--red); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-family: 'Bebas Neue'; }
+        .wa-messages {
+            flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+            background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 20px 20px;
+        }
+        .msg-bubble { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 13.5px; position: relative; word-wrap: break-word; line-height: 1.4; }
+        .msg-in { background-color: var(--wa-msg-in); color: var(--text); align-self: flex-start; border-top-left-radius: 0; }
+        .msg-out { background-color: var(--wa-msg-out); color: var(--text); align-self: flex-end; border-top-right-radius: 0; }
+        .msg-time { font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 4px; display: block; }
+        .typing-indicator { display: none; align-self: flex-start; background-color: var(--wa-msg-in); padding: 10px 15px; border-radius: 20px; margin-bottom: 5px; }
+        .typing-dot { display: inline-block; width: 6px; height: 6px; background-color: var(--text-muted); border-radius: 50%; margin: 0 2px; animation: typing 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        .wa-input-area { background-color: var(--card); padding: 10px; display: flex; gap: 10px; align-items: center; }
+        .wa-input { flex: 1; background-color: var(--bg); border: none; padding: 12px 15px; border-radius: 20px; color: var(--text); font-family: 'Outfit'; outline: none; font-size: 14px; }
+        .wa-send { background-color: var(--green); color: #000; border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; font-weight: bold; }
+
+        .side-panels-container { flex: 1; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 20px; }
+
+        .chat-controls { display: flex; flex-direction: column; gap: 12px; }
+        .btn-primary {
+            background-color: var(--green); color: #000; border: none; padding: 14px;
+            border-radius: 12px; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 15px;
+            cursor: pointer; text-align: center; width: 100%; box-shadow: 0 4px 15px rgba(52, 199, 89, 0.3); transition: transform 0.1s;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+        .quick-replies { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .btn-chip { background-color: var(--card); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'Outfit'; transition: background 0.2s; }
+        .btn-chip:hover { background-color: var(--card-hover); border-color: var(--green); color: var(--green); }
+
+        .sidebar { background-color: transparent; display: flex; flex-direction: column; gap: 12px; }
+        .chat-card { background: var(--card); padding: 16px; border-radius: 14px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s; }
+        .chat-card:hover { transform: translateY(-3px); border-color: var(--text-muted); }
+        .chat-card-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .chat-card-name { font-weight: 700; font-size: 15px; }
+        .chat-card-time { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+        .chat-card-msg { font-size: 13px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 10px; }
+        .tag { font-size: 10px; padding: 4px 10px; border-radius: 8px; font-weight: 700; display: inline-block; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tag-ia { background-color: rgba(52, 199, 89, 0.15); color: var(--green); border: 1px solid rgba(52, 199, 89, 0.3); }
+        .tag-zona { background-color: rgba(255, 204, 0, 0.15); color: var(--gold); border: 1px solid rgba(255, 204, 0, 0.3); }
+
+        /* --- PANEL DE SEGUIMIENTO (Estilo Rappi) --- */
+        #tracking-panel {
+            background: var(--tracker-bg); border-radius: 20px; padding: 30px 20px;
+            text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes slideIn { from { opacity: 0; transform: scale(0.95) translateX(20px); } to { opacity: 1; transform: scale(1) translateX(0); } }
+        
+        .tracker-img-container {
+            width: 120px; height: 120px; margin: 0 auto 25px auto; background: var(--card);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 65px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 3px solid var(--border);
+        }
+        
+        .seguimiento-linea { display: flex; justify-content: space-between; position: relative; margin-bottom: 8px; padding: 0 10px; }
+        .seg-bg-line { position: absolute; top: 16px; left: 25px; right: 25px; height: 4px; background: var(--border); z-index: 1; border-radius: 2px; }
+        #tracking-progress { height: 100%; width: 0%; background: var(--green); border-radius: 2px; transition: width 0.8s ease-in-out; }
+        
+        .seguimiento-paso {
+            position: relative; z-index: 2; background: var(--card); color: var(--text-muted); width: 36px; height: 36px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px;
+            border: 3px solid var(--border); transition: all 0.4s;
+        }
+        .seguimiento-paso.active { background: var(--green); color: #000; border-color: var(--green); box-shadow: 0 0 10px rgba(52,199,89,0.5); transform: scale(1.1); }
+        
+        .seguimiento-textos { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-bottom: 25px; padding: 0 5px; }
+        .seguimiento-textos span { flex: 1; text-align: center; }
+
+        .seguimiento-status { font-family: 'Outfit'; font-size: 22px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+        .seguimiento-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 25px; line-height: 1.4; }
+        
+        .seguimiento-btn {
+            background: var(--green); color: #000; border: none; padding: 15px; border-radius: 30px;
+            width: 100%; font-weight: 800; font-size: 15px; cursor: pointer; font-family: 'Outfit'; transition: transform 0.1s, opacity 0.2s;
+        }
+        .seguimiento-btn:active { transform: scale(0.97); }
+
+        /* --- GRIDS (Agentes, Analytics, Menu) --- */
+        .grid-container { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .card { background-color: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; }
+        .card-icon { font-size: 38px; margin-bottom: 12px; }
+        .card-title { font-size: 19px; margin-bottom: 8px; font-weight: 700; color: var(--text); }
+
+        /* --- VISTA 3: ANALYTICS (Mejorada) --- */
+        .stat-value { font-size: 42px; margin: 5px 0 12px 0; color: var(--text); font-family: 'Bebas Neue'; line-height: 1; }
+        .progress-bg { background-color: var(--bg); height: 8px; border-radius: 4px; overflow: hidden; }
+        .progress-bar { background-color: var(--green); height: 100%; width: 0%; transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 4px; }
+
+        /* Gráficos CSS */
+        .chart-wrapper { display: flex; align-items: flex-end; justify-content: space-around; height: 160px; margin-top: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+        .chart-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; flex: 1; gap: 8px; }
+        .chart-bar-fill { width: 80%; max-width: 60px; border-radius: 6px 6px 0 0; height: 0px; transition: height 1.5s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; }
+        .chart-value { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-family: 'Bebas Neue'; font-size: 16px; color: var(--text); opacity: 0; transition: opacity 0.5s 1s; }
+        .chart-label { font-size: 12px; text-align: center; color: var(--text-muted); font-weight: 600; font-family: 'Outfit'; line-height: 1.2; }
+
+        /* --- VISTA 4: MENU --- */
+        .menu-price { font-family: 'Bebas Neue'; font-size: 28px; color: var(--green); margin-top: 15px; }
+
+        /* --- VISTA 5: FLUJO --- */
+        .timeline { position: relative; padding-left: 35px; margin-top: 20px; }
+        .timeline::before { content: ''; position: absolute; left: 13px; top: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, var(--green), transparent); border-radius: 3px; }
+        .timeline-item { position: relative; margin-bottom: 35px; background: var(--card); padding: 18px; border-radius: 12px; border: 1px solid var(--border); }
+        .timeline-dot { position: absolute; left: -31px; top: 20px; width: 15px; height: 15px; background-color: var(--bg); border-radius: 50%; border: 4px solid var(--green); box-shadow: 0 0 10px rgba(52,199,89,0.3); }
+        .timeline-content h3 { color: var(--text); font-size: 17px; margin-bottom: 6px; font-weight: 700; }
+        .timeline-content p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+        /* --- MEDIA QUERIES --- */
+        @media (min-width: 860px) {
+            .bottom-nav { display: none; }
+            .top-nav { display: flex; }
+            .main-content { padding-bottom: 20px; }
+            .chat-header-kpis { max-width: 1000px; margin: 0 auto 25px auto; }
+            .main-panels { flex-direction: row; justify-content: center; align-items: flex-start; max-width: 1000px; margin: 0 auto; gap: 40px; }
+            .grid-container { grid-template-columns: repeat(2, 1fr); }
+            .grid-3 { grid-template-columns: repeat(3, 1fr); }
+            .chart-card-full { grid-column: span 2; }
+        }
+        @media (max-width: 859px) {
+            .sidebar { display: none; } /* Ocultar sidebar en móvil por limpieza */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast">
+        <span id="toast-icon">✅</span>
+        <span id="toast-text">Notificación</span>
+    </div>
+
+    <header class="topbar">
+        <div class="logo-area">
+            <h1 class="logo">SMASH🍔</h1>
+        </div>
+        <nav class="top-nav">
+            <button class="nav-btn active" onclick="switchTab('chat')">💬 Chat AI</button>
+            <button class="nav-btn" onclick="switchTab('agentes')">🤖 Agentes</button>
+            <button class="nav-btn" onclick="switchTab('analytics')">📊 Analytics</button>
+            <button class="nav-btn" onclick="switchTab('menu')">🍔 Menú</button>
+            <button class="nav-btn" onclick="switchTab('flujo')">🔄 Flujo</button>
+        </nav>
+        <div style="display:flex; align-items:center; gap: 20px;">
+            <div class="live-indicator"><div class="dot"></div> LIVE SYSTEM</div>
+            <button class="theme-switch" onclick="toggleTheme()">🌓 Día/Noche</button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        
+        <section id="view-chat" class="view active">
+            <div class="chat-header-kpis">
+                <div class="kpi-item">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Pedidos Hoy</div>
+                    <div class="kpi-value" id="kpi-pedidos">142</div>
+                </div>
+                <div class="kpi-item">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Chats Activos</div>
+                    <div class="kpi-value" style="color: var(--gold);">8</div>
+                </div>
+                <div class="kpi-item">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">IA Resolutividad</div>
+                    <div class="kpi-value" style="color: var(--purple);">94%</div>
+                </div>
+                <div class="kpi-item">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Tiempo Resp.</div>
+                    <div class="kpi-value" style="color: var(--text);">1.2s</div>
+                </div>
+            </div>
+
+            <div class="main-panels">
+                <div class="phone-wrapper">
+                    <div class="iphone">
+                        <div class="notch"></div>
+                        <div class="wa-header">
+                            <div class="wa-avatar">SB</div>
+                            <div>
+                                <div style="font-size: 15px; font-weight: 700;">Smash Burger RD 🍔</div>
+                                <div style="font-size: 12px; font-weight: 600; color: var(--green); margin-top: 2px;">● IA Atendiendo</div>
+                            </div>
+                        </div>
+                        <div class="wa-messages" id="chat-container">
+                            <div style="font-size: 11px; background: rgba(0,0,0,0.3); color: #A0A0A0; padding: 8px 12px; border-radius: 8px; align-self: center; text-align: center; margin-bottom: 10px; font-weight: 500;">🔒 Los mensajes y llamadas están cifrados de extremo a extremo.</div>
+                        </div>
+                        <div class="typing-indicator" id="typing-indicator">
+                            <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+                        </div>
+                        <div class="wa-input-area">
+                            <span style="font-size: 20px; color: var(--text-muted); cursor: pointer;">😊</span>
+                            <input type="text" class="wa-input" id="chat-input" placeholder="Escribe un mensaje..." onkeypress="handleEnter(event)">
+                            <button class="wa-send" onclick="sendMessage()">➤</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-panels-container">
+                    
+                    <div id="default-sidebar-controls">
+                        <div class="chat-controls" style="margin-bottom: 25px;">
+                            <button class="btn-primary" onclick="startDemo()" id="demo-btn">▶ Iniciar Demo Irresistible</button>
+                            <div class="quick-replies">
+                                <button class="btn-chip" onclick="quickReply('Hola')">👋 Hola</button>
+                                <button class="btn-chip" onclick="quickReply('3')">📍 Zona Naco</button>
+                                <button class="btn-chip" onclick="quickReply('2 Bacon Smash y unas papas')">🍔 Pedir</button>
+                                <button class="btn-chip" onclick="quickReply('Pagar')">💳 Pagar</button>
+                            </div>
+                        </div>
+
+                        <div class="sidebar">
+                            <h2 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Conversaciones en Vivo</h2>
+                            
+                            <div class="chat-card" style="border-color: var(--green); background: rgba(52, 199, 89, 0.05);">
+                                <div class="chat-card-header">
+                                    <span class="chat-card-name">Demo Actual</span>
+                                    <span class="chat-card-time" style="color: var(--green);">Ahora</span>
+                                </div>
+                                <div class="chat-card-msg" id="sidebar-last-msg">Esperando interacción...</div>
+                                <div>
+                                    <span class="tag tag-ia">🤖 IA Activa</span>
+                                </div>
+                            </div>
+
+                            <div class="chat-card">
+                                <div class="chat-card-header">
+                                    <span class="chat-card-name">Carlos M. · +1 829 4XX</span>
+                                    <span class="chat-card-time">2 min</span>
+                                </div>
+                                <div class="chat-card-msg">✅ Pago realizado. En espera.</div>
+                                <div>
+                                    <span class="tag tag-ia">🤖 IA Activa</span>
+                                    <span class="tag tag-zona">📍 Naco</span>
+                                </div>
+                            </div>
+                            
+                            <div class="chat-card">
+                                <div class="chat-card-header">
+                                    <span class="chat-card-name">Laura G. · +1 809 5XX</span>
+                                    <span class="chat-card-time">5 min</span>
+                                </div>
+                                <div class="chat-card-msg">Llegó frío, quiero un reembolso!</div>
+                                <div>
+                                    <span class="tag" style="background: rgba(255, 59, 48, 0.15); color: var(--red); border: 1px solid rgba(255, 59, 48, 0.3);">👤 Supervisor Asignado</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tracking-panel" style="display: none;">
+                        <div class="tracker-img-container" id="motorizado-img">
+                            🛵
+                        </div>
+                        
+                        <div class="seguimiento-linea">
+                            <div class="seg-bg-line">
+                                <div id="tracking-progress"></div>
+                            </div>
+                            <div class="seguimiento-paso" id="step-1">📝</div>
+                            <div class="seguimiento-paso" id="step-2">🍳</div>
+                            <div class="seguimiento-paso" id="step-3">🚴</div>
+                            <div class="seguimiento-paso" id="step-4">🏠</div>
+                        </div>
+                        
+                        <div class="seguimiento-textos">
+                            <span>Confirmado</span>
+                            <span>Cocina</span>
+                            <span>En Camino</span>
+                            <span>Entregado</span>
+                        </div>
+
+                        <h3 class="seguimiento-status" id="tracking-status-title">Preparando tu pedido</h3>
+                        <p class="seguimiento-desc" id="tracking-status-desc">Nuestros chefs están cocinando tus Smash Burgers con amor. ¡Casi listas!</p>
+                        
+                        <button class="seguimiento-btn" onclick="resetDemo()">Volver a mi pedido</button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section id="view-agentes" class="view" style="max-width: 1000px; margin: 0 auto;">
+            <h1 class="metric" style="font-size: 32px; margin-bottom: 8px;">Sistema Multi-Agente IA</h1>
+            <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 30px;">Arquitectura de agentes autónomos que gestionan todo el proceso de Smash Burger RD sin intervención humana.</p>
+            
+            <div class="grid-container grid-2">
+                <div class="card" style="border-left: 4px solid var(--green);">
+                    <div class="card-icon">🤖</div>
+                    <h2 class="card-title">SmashBot Principal</h2>
+                    <span class="tag tag-ia" style="margin-bottom: 12px; display: inline-block;">● ACTIVO</span>
+                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">Procesa el Lenguaje Natural. Entiende modismos dominicanos, mapea el menú, saluda, estructura pedidos y calcula el carrito dinámicamente.</p>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--gold);">
+                    <div class="card-icon">📍</div>
+                    <h2 class="card-title">Agente de Zonas & Rutas</h2>
+                    <span class="tag tag-zona" style="margin-bottom: 12px; display: inline-block;">● ACTIVO</span>
+                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">Identifica el sector del cliente, determina la sede de cocina (Dark Kitchen) más cercana y aplica la tarifa de delivery precisa por kilometraje.</p>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--red);">
+                    <div class="card-icon">💳</div>
+                    <h2 class="card-title">Agente Financiero</h2>
+                    <span class="tag" style="background: rgba(255, 59, 48, 0.1); color: var(--red); border: 1px solid rgba(255, 59, 48, 0.3); margin-bottom: 12px; display: inline-block;">● ACTIVO</span>
+                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">Genera links de pago únicos (Cardnet/Azul) o valida comprobantes de transferencia vía visión artificial. Dispara la orden solo si el dinero entró.</p>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--blue);">
+                    <div class="card-icon">📱</div>
+                    <h2 class="card-title">Agente Logístico KDS</h2>
+                    <span class="tag" style="background: rgba(90, 200, 250, 0.1); color: var(--blue); border: 1px solid rgba(90, 200, 250, 0.3); margin-bottom: 12px; display: inline-block;">⏳ PRÓXIMAMENTE</span>
+                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">Unificará las órdenes de WhatsApp directo a las pantallas de la cocina (Kitchen Display System) y rastreará a los motorizados por GPS.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-analytics" class="view" style="max-width: 1000px; margin: 0 auto;">
+            <h1 class="metric" style="font-size: 32px; margin-bottom: 30px;">Analytics de WhatsApp (Hoy)</h1>
+            
+            <div class="grid-container grid-3" style="margin-bottom: 25px;">
+                <div class="card">
+                    <h3 style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">📩 Mensajes Procesados</h3>
+                    <div class="stat-value" data-target="1845">0</div>
+                    <div style="font-size: 12px; color: var(--green); font-weight: bold; margin-bottom: 8px;">↑ +24% vs ayer</div>
+                    <div class="progress-bg"><div class="progress-bar" id="bar-msg" style="background: var(--green);"></div></div>
+                </div>
+                <div class="card">
+                    <h3 style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">🍔 Pedidos Pagados</h3>
+                    <div class="stat-value" data-target="142" style="color: var(--red);">0</div>
+                    <div style="font-size: 12px; color: var(--red); font-weight: bold; margin-bottom: 8px;">↑ +31% vs ayer</div>
+                    <div class="progress-bg"><div class="progress-bar" id="bar-ped" style="background: var(--red);"></div></div>
+                </div>
+                <div class="card">
+                    <h3 style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">🤖 Atención Sin Humano</h3>
+                    <div class="stat-value" data-target="94" data-suffix="%" style="color: var(--purple);">0%</div>
+                    <div style="font-size: 12px; color: var(--purple); font-weight: bold; margin-bottom: 8px;">Eficiencia IA</div>
+                    <div class="progress-bg"><div class="progress-bar" id="bar-ia" style="background: var(--purple);"></div></div>
+                </div>
+            </div>
+
+            <div class="grid-container grid-2">
+                
+                <div class="card" id="top-productos-vacios">
+                    <h3 style="font-family: 'Bebas Neue'; font-size: 22px; margin-bottom: 10px; color: var(--text); letter-spacing: 1px;">🔥 TOP PRODUCTOS</h3>
+                    
+                    <div class="chart-wrapper">
+                        <div class="chart-col">
+                            <div class="chart-bar-fill" style="background: var(--green);" data-h="90%">
+                                <span class="chart-value">124</span>
+                            </div>
+                            <div class="chart-label">Bacon<br>Smash</div>
+                        </div>
+                        <div class="chart-col">
+                            <div class="chart-bar-fill" style="background: var(--red);" data-h="65%">
+                                <span class="chart-value">85</span>
+                            </div>
+                            <div class="chart-label">Double<br>Smash</div>
+                        </div>
+                        <div class="chart-col">
+                            <div class="chart-bar-fill" style="background: var(--gold);" data-h="45%">
+                                <span class="chart-value">52</span>
+                            </div>
+                            <div class="chart-label">Papas<br>Trufadas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="distribucion-zona-vacios">
+                    <h3 style="font-family: 'Bebas Neue'; font-size: 22px; margin-bottom: 10px; color: var(--text); letter-spacing: 1px;">📍 DISTRIBUCIÓN POR ZONA</h3>
+                    
+                    <div class="chart-wrapper">
+                        <div class="chart-col">
+                            <div class="chart-bar-fill" style="background: var(--blue);" data-h="80%">
+                                <span class="chart-value">40%</span>
+                            </div>
+                            <div class="chart-label">Rep.<br>Colombia</div>
+                        </div>
+                        <div class="chart-col">
+                            <div class="chart-bar-fill" style="background: var(--purple);" data-h="60%">
+                                <span class="chart-value">30%</span>
+                            </div>
+                            <div class="chart-label">Naco /<br>Piantini</div>
+                        </div>
+                        <div class="chart-col">
+                            <div class="chart-bar-fill" style="background: var(--green);" data-h="35%">
+                                <span class="chart-value">18%</span>
+                            </div>
+                            <div class="chart-label">Arroyo<br>Hondo</div>
+                        </div>
+                        <div class="chart-col">
+                            <div class="chart-bar-fill" style="background: var(--red);" data-h="25%">
+                                <span class="chart-value">12%</span>
+                            </div>
+                            <div class="chart-label">Mirador<br>Norte</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="view-menu" class="view" style="max-width: 1000px; margin: 0 auto;">
+            <h1 class="metric" style="font-size: 32px; margin-bottom: 5px;">Menú Entrenado en la IA</h1>
+            <p style="font-size: 15px; color: var(--text-muted); margin-bottom: 30px;">Precios en RD$. El NLP mapea estos productos incluso con faltas ortográficas o audios.</p>
+            
+            <h3 style="font-size: 14px; color: var(--red); letter-spacing: 2px; margin-bottom: 15px; font-weight: 800;">🍔 BURGERS ESPECIALES</h3>
+            <div class="grid-container grid-3" style="margin-bottom: 35px;">
+                <div class="card">
+                    <h2 class="card-title">Clásica Smash</h2>
+                    <p style="font-size: 14px; color: var(--text-muted);">Patty smash, queso americano, pickles, mostaza en pan brioche suave.</p>
+                    <div class="menu-price">RD$ 450</div>
+                </div>
+                <div class="card">
+                    <h2 class="card-title">Double Smash</h2>
+                    <p style="font-size: 14px; color: var(--text-muted);">Dos patties smash jugosos, doble queso, cebolla caramelizada.</p>
+                    <div class="menu-price">RD$ 600</div>
+                </div>
+                <div class="card">
+                    <h2 class="card-title">Baconception</h2>
+                    <p style="font-size: 14px; color: var(--text-muted);">Doble smash, extra bacon crujiente, queso, salsa secreta de la casa.</p>
+                    <div class="menu-price">RD$ 650</div>
+                </div>
+            </div>
+
+            <h3 style="font-size: 14px; color: var(--gold); letter-spacing: 2px; margin-bottom: 15px; font-weight: 800;">🍟 ACOMPAÑANTES & BEBIDAS</h3>
+            <div class="grid-container grid-3">
+                <div class="card">
+                    <h2 class="card-title">Papas Trufadas</h2>
+                    <p style="font-size: 14px; color: var(--text-muted);">Corte fino con aceite de trufa, queso parmesano y perejil.</p>
+                    <div class="menu-price">RD$ 220</div>
+                </div>
+                <div class="card">
+                    <h2 class="card-title">Cheese & Bacon Fries</h2>
+                    <p style="font-size: 14px; color: var(--text-muted);">Papas bañadas en salsa cheddar fundida y tocineta crujiente.</p>
+                    <div class="menu-price">RD$ 250</div>
+                </div>
+                <div class="card">
+                    <h2 class="card-title">Bebidas (12oz)</h2>
+                    <p style="font-size: 14px; color: var(--text-muted);">Coca-Cola, Sprite, Fanta o Agua mineral embotellada.</p>
+                    <div class="menu-price">RD$ 100</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-flujo" class="view" style="max-width: 800px; margin: 0 auto;">
+            <h1 class="metric" style="font-size: 32px; margin-bottom: 5px;">Flujo de Conversión IA</h1>
+            <p style="font-size: 15px; color: var(--text-muted); margin-bottom: 20px;">Cómo interactúan los agentes desde el primer "Hola" hasta la entrega en la puerta.</p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>1. Ingreso de Mensaje (API)</h3>
+                        <p>El cliente escribe al número de WhatsApp de Smash Burger. La API oficial de Meta envía el Webhook a nuestro servidor en milisegundos.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="border-color: var(--gold);"></div>
+                    <div class="timeline-content">
+                        <h3>2. NLP & Asignación de Zona</h3>
+                        <p>SmashBot detecta la intención. Pregunta la zona (Ej: Naco), asigna la Sede más cercana y calcula automáticamente el precio del delivery por kilometraje.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>3. Construcción del Carrito Libre</h3>
+                        <p>El cliente dice en texto libre "Quiero 2 bacon y papas". La IA comprende el contexto, mapea a la base de datos de productos, suma los precios + el delivery y devuelve una cotización perfecta.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="border-color: var(--red);"></div>
+                    <div class="timeline-content">
+                        <h3>4. Pasarela de Pago Segura</h3>
+                        <p>Si el usuario acepta, el Agente Financiero genera un link de pago único y seguro (Ej: Cardnet). El bot queda a la espera de la confirmación silenciosa del banco.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot" style="border-color: var(--blue);"></div>
+                    <div class="timeline-content">
+                        <h3>5. KDS y Logística (Tracking)</h3>
+                        <p>Al confirmarse el pago, la orden se imprime automáticamente en las pantallas de la cocina. El bot envía al cliente un enlace web visual para seguir al motorizado estilo Rappi/Uber Eats.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="switchTab('chat')"><span style="font-size: 20px;">💬</span>Chat</button>
+        <button class="nav-btn" onclick="switchTab('agentes')"><span style="font-size: 20px;">🤖</span>Agentes</button>
+        <button class="nav-btn" onclick="switchTab('analytics')"><span style="font-size: 20px;">📊</span>Stats</button>
+        <button class="nav-btn" onclick="switchTab('menu')"><span style="font-size: 20px;">🍔</span>Menú</button>
+        <button class="nav-btn" onclick="switchTab('flujo')"><span style="font-size: 20px;">🔄</span>Flujo</button>
+    </nav>
+
+    <script>
+        // --- NAVEGACIÓN ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('view-' + tabId).classList.add('active');
+            
+            // Activar botones (Mobile y Desktop)
+            document.querySelectorAll(`.nav-btn[onclick="switchTab('${tabId}')"]`).forEach(el => el.classList.add('active'));
+
+            if (tabId === 'analytics') {
+                animateAnalytics();
+            }
+        }
+
+        // --- TEMA CLARO/OSCURO ---
+        function toggleTheme() {
+            document.body.classList.toggle('day');
+        }
+
+        // --- TOAST NOTIFICATIONS MEJORADO ---
+        function showToast(message, icon = '✅') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = message;
+            document.getElementById('toast-icon').innerText = icon;
+            
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3500); // Ligeramente más tiempo para leer cómodamente
+        }
+
+        // --- LÓGICA DEL CHATBOT ---
+        const chatContainer = document.getElementById('chat-container');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const chatInput = document.getElementById('chat-input');
+        const sidebarMsg = document.getElementById('sidebar-last-msg');
+
+        function getCurrentTime() {
+            return new Date().toLocaleTimeString('es-DO', {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function appendMessage(text, type) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg-bubble ${type}`;
+            // Negritas WhatsApp style
+            const formattedText = text.replace(/\*([^*]+)\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+            msgDiv.innerHTML = `${formattedText} <span class="msg-time">${getCurrentTime()}</span>`;
+            
+            // Animación pop-in
+            msgDiv.style.opacity = '0';
+            msgDiv.style.transform = 'translateY(10px) scale(0.98)';
+            chatContainer.appendChild(msgDiv);
+            
+            setTimeout(() => {
+                msgDiv.style.opacity = '1';
+                msgDiv.style.transform = 'translateY(0) scale(1)';
+            }, 10);
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            sidebarMsg.innerText = (type === 'msg-in' ? 'IA: ' : 'Tú: ') + text.substring(0, 25) + '...';
+        }
+
+        // Mensaje inicial
+        setTimeout(() => {
+            appendMessage("¡Hola! 👋 Soy *SmashBot* de Smash Burger RD 🍔.\n\n¿En qué te puedo ayudar el día de hoy?", 'msg-in');
+        }, 800);
+
+        function quickReply(text) {
+            chatInput.value = text;
+            sendMessage();
+        }
+
+        function handleEnter(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, 'msg-out');
+            chatInput.value = '';
+
+            typingIndicator.style.display = 'block';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+                let botReply = "¿Podrías ser más específico? (Intenta saludar, pedir zonas o encargar unas burgers).";
+                const textLower = text.toLowerCase();
+
+                if (textLower.includes('hola') || textLower.includes('pedir') || textLower.includes('buenas')) {
+                    botReply = "¡Qué bueno tenerte por acá! 🍔\n\n¿Desde qué zona nos escribes hoy?\n1️⃣ Mirador Norte\n2️⃣ Arroyo Hondo\n3️⃣ Naco / Piantini\n4️⃣ Rep. Colombia";
+                } else if (textLower.includes('3') || textLower.includes('naco') || textLower.includes('piantini')) {
+                    botReply = "📍 *Sede Naco / Piantini* seleccionada.\nCosto de delivery estimado: *RD$150*\n\n¿Qué vas a pedir hoy del menú? 👇";
+                } else if (textLower.includes('pedido') || textLower.includes('bacon') || textLower.includes('papas')) {
+                    botReply = "🧾 *Resumen de tu pedido:*\n\n🍔 2 × Baconception = *RD$1,300*\n🍟 1 × Papas Trufadas = *RD$220*\n🛵 Delivery (Naco) = *RD$150*\n──────────────\n💰 *TOTAL: RD$1,670*\n\n¿Procedemos a pagar? Escribe *Pagar* o *Sí*";
+                } else if (textLower.includes('pagar') || textLower.includes('si') || textLower.includes('sí')) {
+                    botReply = "💳 *Link de pago seguro generado:*\n🔗 https://pay.smashburger.rd/SB-0089\n\nNotifícame cuando realices el pago.";
+                    showToast("Enlace generado con éxito", "🔗");
+                } else if (textLower.includes('listo') || textLower.includes('pague') || textLower.includes('pagado')) {
+                    triggerPaymentSuccessLogic();
+                    return; // Detenemos aquí porque la lógica de pago hace el resto
+                }
+
+                appendMessage(botReply, 'msg-in');
+            }, 1000 + Math.random() * 600);
+        }
+
+        // --- LÓGICA DE DEMO AUTOMÁTICA Y PANEL RAPPI ---
+        let demoInProgress = false;
+        
+        function startDemo() {
+            if (demoInProgress) return;
+            demoInProgress = true;
+            
+            const btn = document.getElementById('demo-btn');
+            btn.style.opacity = '0.5';
+            btn.innerText = "⏳ Ejecutando Demo...";
+            chatInput.disabled = true;
+
+            const sequence = [
+                { text: "Hola, quiero pedir la cena", sender: "user", delay: 800 },
+                { text: "¡Hola! 👋 Bienvenido a *Smash Burger RD*. ¿Desde qué sector nos escribes para asignar tu cocina y calcular delivery?", sender: "bot", delay: 2800 },
+                { text: "Sector Naco", sender: "user", delay: 5000 },
+                { text: "📍 Sede Naco / Piantini. Delivery: *RD$150*.\n\n¿Qué vas a pedir hoy del menú? 🍔", sender: "bot", delay: 7500 },
+                { text: "Quiero 2 Double Smash y 1 Papas Trufadas", sender: "user", delay: 10500 },
+                { text: "🧾 *Resumen de pedido:*\n\n🍔 2 × Double Smash = *RD$1,200*\n🍟 1 × Papas Trufadas = *RD$220*\n🛵 Delivery (Naco) = *RD$150*\n──────────────\n💰 *TOTAL: RD$1,570*\n\n¿Confirmamos para generar el pago? *SÍ*", sender: "bot", delay: 13500 },
+                { text: "SÍ ✅", sender: "user", delay: 16000 },
+                { text: "💳 *Link de pago seguro:*\n🔗 https://pay.smashburger.rd/SB-1423\n\n(Simulando que el usuario entra y paga...)", sender: "bot", delay: 18500 }
+            ];
+
+            chatContainer.innerHTML = '<div style="font-size: 11px; background: rgba(0,0,0,0.3); color: #A0A0A0; padding: 8px 12px; border-radius: 8px; align-self: center; text-align: center; margin-bottom: 10px; font-weight: 500;">🔒 Chat Cifrado · IA Atendiendo</div>';
+
+            let accumulatedTime = 0;
+            sequence.forEach((step, index) => {
+                accumulatedTime = step.delay;
+                
+                if (step.sender === 'bot') {
+                    setTimeout(() => {
+                        typingIndicator.style.display = 'block';
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }, accumulatedTime - 1000);
+                }
+
+                setTimeout(() => {
+                    typingIndicator.style.display = 'none';
+                    appendMessage(step.text, step.sender === 'user' ? 'msg-out' : 'msg-in');
+                    
+                    if (index === sequence.length - 1) {
+                        // Trigger final sequence (Toasts & Tracking panel)
+                        setTimeout(() => { triggerPaymentSuccessLogic(); }, 2500);
+                    }
+                }, accumulatedTime);
+            });
+        }
+
+        // Lógica post-pago: Toasts secuenciales y Tracker
+        function triggerPaymentSuccessLogic() {
+            appendMessage("✅ *¡Pago Confirmado por el Banco!*\n\nTu pedido #SB-1423 ya está en nuestras pantallas de cocina 🍳. \n\nPuedes seguir tu pedido en tiempo real en el panel lateral. ¡Disfruta tus Smash!", 'msg-in');
+            
+            // Increment KPI
+            let kpi = document.getElementById('kpi-pedidos');
+            kpi.innerText = parseInt(kpi.innerText) + 1;
+
+            // 1. Toast: Demo Completada
+            showToast("Demo interactiva completada", "✨");
+            
+            // 2. Toast: Pago Exitoso (después de 3.5s)
+            setTimeout(() => {
+                showToast("Pago procesado exitosamente", "💳");
+                
+                // Mostrar Panel de Seguimiento
+                document.getElementById('default-sidebar-controls').style.display = 'none';
+                document.getElementById('tracking-panel').style.display = 'block';
+                
+                // Animar paso 1
+                document.getElementById('step-1').classList.add('active');
+                document.getElementById('tracking-progress').style.width = '15%';
+
+            }, 3500);
+
+            // 3. Toast: Domiciliario en camino + animar paso 2 (después de 7.5s)
+            setTimeout(() => {
+                showToast("Su domiciliario va en camino", "🛵");
+                
+                document.getElementById('step-2').classList.add('active');
+                document.getElementById('tracking-progress').style.width = '50%';
+                
+                document.getElementById('tracking-status-title').innerText = "En Preparación";
+                document.getElementById('tracking-status-desc').innerText = "Estamos dándole la vuelta a tus patties en la plancha.";
+
+                // Simular que sale a camino rápido para el demo
+                setTimeout(() => {
+                    document.getElementById('step-3').classList.add('active');
+                    document.getElementById('tracking-progress').style.width = '85%';
+                    document.getElementById('tracking-status-title').innerText = "Motorizado en Camino";
+                    document.getElementById('tracking-status-desc').innerText = "Juan Pérez (Honda CG) se dirige a tu ubicación.";
+                }, 4000);
+
+            }, 7500);
+        }
+
+        // Volver del panel de tracking a los controles normales
+        function resetDemo() {
+            document.getElementById('tracking-panel').style.display = 'none';
+            document.getElementById('default-sidebar-controls').style.display = 'block';
+            
+            // Reset state
+            demoInProgress = false;
+            const btn = document.getElementById('demo-btn');
+            btn.style.opacity = '1';
+            btn.innerText = "▶ Iniciar Demo Irresistible";
+            chatInput.disabled = false;
+            
+            // Limpiar tracker
+            document.querySelectorAll('.seguimiento-paso').forEach(el => el.classList.remove('active'));
+            document.getElementById('tracking-progress').style.width = '0%';
+            document.getElementById('tracking-status-title').innerText = "Pedido Confirmado";
+            document.getElementById('tracking-status-desc').innerText = "Hemos recibido tu orden y la estamos enviando a cocina.";
+        }
+
+        // --- ANIMACIÓN DE ESTADÍSTICAS Y GRÁFICOS (Analytics) ---
+        let analyticsAnimated = false;
+        function animateAnalytics() {
+            if (analyticsAnimated) return;
+            
+            // Animación de números
+            const counters = document.querySelectorAll('.stat-value');
+            counters.forEach(counter => {
+                const target = +counter.getAttribute('data-target');
+                const suffix = counter.getAttribute('data-suffix') || '';
+                const duration = 2000;
+                const increment = target / (duration / 16); 
+                
+                let current = 0;
+                const updateCounter = () => {
+                    current += increment;
+                    if (current < target) {
+                        counter.innerText = Math.ceil(current) + suffix;
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.innerText = target + suffix;
+                    }
+                };
+                updateCounter();
+            });
+
+            // Llenado de Barras Horizontales (KPIs)
+            setTimeout(() => {
+                document.getElementById('bar-msg').style.width = '88%';
+                document.getElementById('bar-ped').style.width = '64%';
+                document.getElementById('bar-ia').style.width = '94%';
+                
+                // Llenado de Barras Verticales de los Nuevos Gráficos CSS
+                document.querySelectorAll('.chart-bar-fill').forEach(bar => {
+                    bar.style.height = bar.getAttribute('data-h');
+                    // Mostrar los números encima de la barra
+                    const valueTag = bar.querySelector('.chart-value');
+                    if(valueTag) valueTag.style.opacity = '1';
+                });
+            }, 300);
+
+            analyticsAnimated = true;
+        }
+    </script>
+</body>
+</html>
